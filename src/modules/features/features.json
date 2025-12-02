@@ -1,0 +1,382 @@
+[
+  {
+    "key": "erp:grupos-acesso:menu",
+    "name": "Grupos de Acesso: Menu",
+    "description": "Permite visualizar o menu de grupos de acesso.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:grupos-acesso:listar",
+    "name": "Grupos de Acesso: Listar",
+    "description": "Permite visualizar a listagem de grupos de acesso.",
+    "api-routes": [
+      "api-usuarios:get:/groups/",
+      "api-usuarios:get:/groups"
+    ]
+  },
+  {
+    "key": "erp:grupos-acesso:buscar-por-texto",
+    "name": "Grupos de Acesso: Buscar por Texto",
+    "description": "Permite buscar grupos de acesso por texto.",
+    "api-routes": [
+      "api-usuarios:get:/groups/buscar-por-texto"
+    ]
+  },
+  {
+    "key": "erp:grupos-acesso:visualizar",
+    "name": "Grupos de Acesso: Visualizar",
+    "description": "Permite visualizar os detalhes completos de um grupo de acesso.",
+    "api-routes": [
+      "api-usuarios:get:/groups/:id"
+    ]
+  },
+  {
+    "key": "erp:grupos-acesso:criar",
+    "name": "Grupos de Acesso: Criar",
+    "description": "Permite cadastrar novos grupos de acesso.",
+    "api-routes": [
+      "api-usuarios:post:/groups/"
+    ]
+  },
+  {
+    "key": "erp:grupos-acesso:editar",
+    "name": "Grupos de Acesso: Editar",
+    "description": "Permite alterar informações de grupos de acesso existentes.",
+    "api-routes": [
+      "api-usuarios:put:/groups/:id"
+    ]
+  },
+  {
+    "key": "erp:grupos-acesso:excluir",
+    "name": "Grupos de Acesso: Excluir",
+    "description": "Permite remover grupos de acesso do sistema.",
+    "api-routes": [
+      "api-usuarios:delete:/groups/:id"
+    ]
+  },
+  {
+    "key": "erp:usuarios:menu",
+    "name": "Usuários: Menu",
+    "description": "Permite visualizar o menu de usuários.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:usuarios:listar",
+    "name": "Usuários: Listar",
+    "description": "Permite visualizar a listagem de usuários cadastrados.",
+    "api-routes": [
+      "api-usuarios:get:/users/",
+      "api-usuarios:get:/users"
+    ]
+  },
+  {
+    "key": "erp:usuarios:buscar-por-texto",
+    "name": "Usuários: Buscar por Texto",
+    "description": "Permite buscar usuários por texto (nome, login, email).",
+    "api-routes": [
+      "api-usuarios:get:/users/buscar-por-texto"
+    ]
+  },
+  {
+    "key": "erp:usuarios:visualizar",
+    "name": "Usuários: Visualizar",
+    "description": "Permite visualizar os detalhes completos de um usuário.",
+    "api-routes": [
+      "api-usuarios:get:/users/:id"
+    ]
+  },
+  {
+    "key": "erp:usuarios:criar",
+    "name": "Usuários: Criar",
+    "description": "Permite cadastrar novos usuários no sistema.",
+    "api-routes": [
+      "api-usuarios:post:/users/"
+    ]
+  },
+  {
+    "key": "erp:usuarios:criar-cliente-publico",
+    "name": "Usuários: Criar Cliente Público",
+    "description": "Permite criar usuário cliente sem autenticação (cadastro público).",
+    "api-routes": [
+      "api-usuarios:post:/users/clientes/publico"
+    ]
+  },
+  {
+    "key": "erp:usuarios:editar",
+    "name": "Usuários: Editar",
+    "description": "Permite alterar dados cadastrais de usuários.",
+    "api-routes": [
+      "api-usuarios:put:/users/:id",
+      "api-usuarios:put:/users/:id/basic"
+    ]
+  },
+  {
+    "key": "erp:usuarios:excluir",
+    "name": "Usuários: Excluir",
+    "description": "Permite remover usuários do sistema.",
+    "api-routes": [
+      "api-usuarios:delete:/users/:id"
+    ]
+  },
+  {
+    "key": "erp:usuarios:atribuir-grupos",
+    "name": "Usuários: Atribuir Grupos de Acesso",
+    "description": "Permite atribuir ou remover grupos de acesso de um usuário.",
+    "api-routes": [
+      "api-usuarios:put:/users/:id/groups"
+    ]
+  },
+  {
+    "key": "erp:usuarios:atribuir-permissoes-particulares",
+    "name": "Usuários: Atribuir Permissões Particulares",
+    "description": "Permite conceder ou negar funcionalidades específicas diretamente ao usuário (exceções).",
+    "api-routes": [
+      "api-usuarios:put:/users/:id/permissions"
+    ]
+  },
+  {
+    "key": "erp:usuarios:visualizar-permissoes",
+    "name": "Usuários: Visualizar Permissões",
+    "description": "Permite visualizar as permissões de um usuário.",
+    "api-routes": [
+      "api-usuarios:get:/users/:id/permissions"
+    ]
+  },
+  {
+    "key": "erp:usuarios:minhas-funcionalidades",
+    "name": "Usuários: Minhas Funcionalidades",
+    "description": "Permite visualizar as funcionalidades do usuário logado.",
+    "api-routes": [
+      "api-usuarios:get:/users/my-permissions"
+    ]
+  },
+  {
+    "key": "erp:usuarios:resetar-senha",
+    "name": "Usuários: Resetar Senha",
+    "description": "Permite enviar e-mail de redefinição de senha para o usuário.",
+    "api-routes": [
+      "api-usuarios:post:/users/password/reset-request",
+      "api-usuarios:post:/auth/forgot-password"
+    ]
+  },
+  {
+    "key": "erp:auth:login",
+    "name": "Auth: Login",
+    "description": "Permite fazer login no sistema.",
+    "api-routes": [
+      "api-usuarios:post:/auth/login"
+    ]
+  },
+  {
+    "key": "erp:auth:logout",
+    "name": "Auth: Logout",
+    "description": "Permite fazer logout do sistema.",
+    "api-routes": [
+      "api-usuarios:post:/auth/logout"
+    ]
+  },
+  {
+    "key": "erp:auth:refresh-token",
+    "name": "Auth: Refresh Token",
+    "description": "Permite renovar o token de acesso.",
+    "api-routes": [
+      "api-usuarios:post:/auth/refresh-token",
+      "api-usuarios:post:/auth/refresh"
+    ]
+  },
+  {
+    "key": "erp:auth:check-url-permission",
+    "name": "Auth: Verificar Permissão de URL",
+    "description": "Permite verificar se o usuário tem permissão para acessar uma URL específica.",
+    "api-routes": [
+      "api-usuarios:get:/auth/check-url-permission"
+    ]
+  },
+  {
+    "key": "erp:features:listar",
+    "name": "Features: Listar",
+    "description": "Permite visualizar o catálogo de funcionalidades disponíveis.",
+    "api-routes": [
+      "api-usuarios:get:/features/",
+      "api-usuarios:get:/features"
+    ]
+  },
+  {
+    "key": "erp:menus:listar",
+    "name": "Menus: Listar",
+    "description": "Permite visualizar o catálogo de menus disponíveis.",
+    "api-routes": [
+      "api-usuarios:get:/menus/",
+      "api-usuarios:get:/menus"
+    ]
+  },
+  {
+    "key": "erp:clientes:resetar-senha",
+    "name": "Clientes: Resetar Senha",
+    "description": "Permite solicitar e redefinir senha para clientes.",
+    "api-routes": [
+      "api-usuarios:post:/clientes/auth/password/forgot",
+      "api-usuarios:post:/clientes/auth/password/reset"
+    ]
+  },
+  {
+    "key": "erp:dashboard:menu",
+    "name": "Dashboard: Menu",
+    "description": "Permite visualizar o menu de dashboard.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:dashboard:visualizar",
+    "name": "Dashboard: Visualizar",
+    "description": "Permite visualizar o dashboard com estatísticas e métricas.",
+    "api-routes": [
+      "api-admin:get:/:schema/dashboard"
+    ]
+  },
+  {
+    "key": "erp:gestao:menu",
+    "name": "Gestão: Menu",
+    "description": "Permite visualizar o menu de gestão (lojas e clientes).",
+    "api-routes": []
+  },
+  {
+    "key": "erp:lojas:menu",
+    "name": "Lojas: Menu",
+    "description": "Permite visualizar o menu de lojas.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:lojas:listar",
+    "name": "Lojas: Listar",
+    "description": "Permite visualizar a listagem de lojas cadastradas.",
+    "api-routes": [
+      "api-admin:get:/:schema/lojas"
+    ]
+  },
+  {
+    "key": "erp:lojas:visualizar",
+    "name": "Lojas: Visualizar",
+    "description": "Permite visualizar os detalhes completos de uma loja.",
+    "api-routes": [
+      "api-admin:get:/:schema/lojas/:id"
+    ]
+  },
+  {
+    "key": "erp:lojas:criar",
+    "name": "Lojas: Criar",
+    "description": "Permite cadastrar novas lojas no sistema.",
+    "api-routes": [
+      "api-admin:post:/:schema/lojas"
+    ]
+  },
+  {
+    "key": "erp:lojas:editar",
+    "name": "Lojas: Editar",
+    "description": "Permite alterar informações de lojas existentes.",
+    "api-routes": [
+      "api-admin:put:/:schema/lojas/:id"
+    ]
+  },
+  {
+    "key": "erp:lojas:excluir",
+    "name": "Lojas: Excluir",
+    "description": "Permite remover lojas do sistema.",
+    "api-routes": [
+      "api-admin:delete:/:schema/lojas/:id"
+    ]
+  },
+  {
+    "key": "erp:itens-recompensa:menu",
+    "name": "Itens de Recompensa: Menu",
+    "description": "Permite visualizar o menu de itens de recompensa.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:itens-recompensa:listar",
+    "name": "Itens de Recompensa: Listar",
+    "description": "Permite visualizar a listagem de itens de recompensa cadastrados.",
+    "api-routes": [
+      "api-admin:get:/:schema/itens-recompensa"
+    ]
+  },
+  {
+    "key": "erp:itens-recompensa:visualizar",
+    "name": "Itens de Recompensa: Visualizar",
+    "description": "Permite visualizar os detalhes completos de um item de recompensa.",
+    "api-routes": [
+      "api-admin:get:/:schema/itens-recompensa/:id"
+    ]
+  },
+  {
+    "key": "erp:itens-recompensa:criar",
+    "name": "Itens de Recompensa: Criar",
+    "description": "Permite cadastrar novos itens de recompensa no sistema.",
+    "api-routes": [
+      "api-admin:post:/:schema/itens-recompensa"
+    ]
+  },
+  {
+    "key": "erp:itens-recompensa:editar",
+    "name": "Itens de Recompensa: Editar",
+    "description": "Permite alterar informações de itens de recompensa existentes.",
+    "api-routes": [
+      "api-admin:put:/:schema/itens-recompensa/:id"
+    ]
+  },
+  {
+    "key": "erp:itens-recompensa:excluir",
+    "name": "Itens de Recompensa: Excluir",
+    "description": "Permite remover itens de recompensa do sistema.",
+    "api-routes": [
+      "api-admin:delete:/:schema/itens-recompensa/:id"
+    ]
+  },
+  {
+    "key": "erp:clientes:menu",
+    "name": "Clientes: Menu",
+    "description": "Permite visualizar o menu de clientes.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:clientes:listar",
+    "name": "Clientes: Listar",
+    "description": "Permite visualizar a listagem de clientes cadastrados.",
+    "api-routes": [
+      "api-clientes:get:/clientes/:schema",
+      "api-clientes:get:/clientes/:schema/"
+    ]
+  },
+  {
+    "key": "erp:clientes:visualizar",
+    "name": "Clientes: Visualizar",
+    "description": "Permite visualizar os detalhes completos de um cliente.",
+    "api-routes": [
+      "api-clientes:get:/clientes/:schema/:id"
+    ]
+  },
+  {
+    "key": "erp:clientes:criar",
+    "name": "Clientes: Criar",
+    "description": "Permite cadastrar novos clientes no sistema.",
+    "api-routes": [
+      "api-clientes:post:/clientes/:schema",
+      "api-clientes:post:/clientes/publico/:schema"
+    ]
+  },
+  {
+    "key": "erp:clientes:editar",
+    "name": "Clientes: Editar",
+    "description": "Permite alterar dados cadastrais de clientes.",
+    "api-routes": [
+      "api-clientes:put:/clientes/:schema/:id"
+    ]
+  },
+  {
+    "key": "erp:clientes:excluir",
+    "name": "Clientes: Excluir",
+    "description": "Permite remover clientes do sistema.",
+    "api-routes": [
+      "api-clientes:delete:/clientes/:schema/:id"
+    ]
+  }
+]

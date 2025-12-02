@@ -1,0 +1,62 @@
+[
+    {
+        "key": "erp:acessos:menu",
+        "category": "Acesso",
+        "name": "Acessos",
+        "description": "Gestão de acessos, usuários e grupos",
+        "url": "#",
+        "icon": "Shield",
+        "children": [
+            {
+                "key": "erp:grupos-acesso:menu",
+                "category": "Acesso",
+                "name": "Grupos de Acesso",
+                "description": "Administração de grupos de acesso",
+                "url": "/grupos-usuarios",
+                "icon": "Groups"
+            },
+            {
+                "key": "erp:usuarios:menu",
+                "category": "Acesso",
+                "name": "Usuários",
+                "description": "Administração de usuários e acessos",
+                "url": "/usuarios",
+                "icon": "AdminPanelSettings"
+            }
+        ]
+    },
+    {
+        "key": "erp:gestao:menu",
+        "category": "Gestão",
+        "name": "Gestão",
+        "description": "Gestão de lojas e clientes",
+        "url": "#",
+        "icon": "Business",
+        "children": [
+            {
+                "key": "erp:lojas:menu",
+                "category": "Gestão",
+                "name": "Lojas",
+                "description": "Administração de lojas e unidades",
+                "url": "/lojas",
+                "icon": "Store"
+            },
+            {
+                "key": "erp:clientes:menu",
+                "category": "Gestão",
+                "name": "Clientes",
+                "description": "Administração de clientes e pontos",
+                "url": "/clientes",
+                "icon": "People"
+            }
+        ]
+    },
+    {
+        "key": "erp:itens-recompensa:menu",
+        "category": "Fidelidade",
+        "name": "Itens de Recompensa",
+        "description": "Administração de itens de recompensa",
+        "url": "/itens-recompensa",
+        "icon": "CardGiftcard"
+    }
+]
