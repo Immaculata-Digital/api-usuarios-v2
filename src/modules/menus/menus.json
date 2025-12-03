@@ -57,6 +57,6 @@
         "name": "Itens de Recompensa",
         "description": "Administração de itens de recompensa",
         "url": "/itens-recompensa",
-        "icon": "CardGiftcard"
+        "icon": "Stars"
     }
 ]
