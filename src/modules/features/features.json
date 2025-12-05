@@ -378,5 +378,53 @@
     "api-routes": [
       "api-clientes:delete:/clientes/:schema/:id"
     ]
+  },
+  {
+    "key": "erp:clientes:buscar-por-usuario",
+    "name": "Clientes: Buscar por Usuário",
+    "description": "Permite buscar cliente pelo ID do usuário.",
+    "api-routes": [
+      "api-clientes:get:/clientes/:schema/usuario/:idUsuario"
+    ]
+  },
+  {
+    "key": "erp:clientes:creditar-pontos",
+    "name": "Clientes: Creditar Pontos",
+    "description": "Permite creditar pontos a um cliente.",
+    "api-routes": [
+      "api-clientes:post:/clientes/:schema/:id/creditar-pontos"
+    ]
+  },
+  {
+    "key": "erp:clientes:debitar-pontos",
+    "name": "Clientes: Debitar Pontos",
+    "description": "Permite debitar pontos de um cliente (resgate de recompensa).",
+    "api-routes": [
+      "api-clientes:post:/clientes/:schema/:id/debitar-pontos"
+    ]
+  },
+  {
+    "key": "erp:clientes:buscar-codigo-resgate",
+    "name": "Clientes: Buscar Código de Resgate",
+    "description": "Permite buscar código de resgate pelo código.",
+    "api-routes": [
+      "api-clientes:get:/clientes/:schema/codigos-resgate/:codigoResgate"
+    ]
+  },
+  {
+    "key": "erp:clientes:buscar-codigo-por-item",
+    "name": "Clientes: Buscar Código por Item",
+    "description": "Permite buscar código de resgate por cliente e item de recompensa.",
+    "api-routes": [
+      "api-clientes:get:/clientes/:schema/:id/codigos-resgate/item/:idItemRecompensa"
+    ]
+  },
+  {
+    "key": "erp:clientes:marcar-codigo-utilizado",
+    "name": "Clientes: Marcar Código como Utilizado",
+    "description": "Permite marcar um código de resgate como utilizado.",
+    "api-routes": [
+      "api-clientes:put:/clientes/:schema/:id/pontos/:codigoResgate"
+    ]
   }
 ]

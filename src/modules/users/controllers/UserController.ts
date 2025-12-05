@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import { AppError } from '../../../core/errors/AppError'
 import { accessGroupRepository } from '../../accessGroups/repositories'
+import { CreateAccessGroupUseCase } from '../../accessGroups/useCases/createAccessGroup/CreateAccessGroupUseCase'
 import { userRepository } from '../repositories'
 import { CreateUserUseCase } from '../useCases/createUser/CreateUserUseCase'
 import { DeleteUserUseCase } from '../useCases/deleteUser/DeleteUserUseCase'
@@ -89,10 +90,18 @@ export class UserController {
         throw new AppError('Login, senha e email são obrigatórios', 400)
       }
 
-      // Buscar grupo de clientes (assumindo que existe um grupo com código "CLIENTES")
-      const clientGroup = await accessGroupRepository.findByCode('CLIENTES')
+      // Buscar ou criar grupo de clientes
+      let clientGroup = await accessGroupRepository.findByCode('CLIENTES')
       if (!clientGroup) {
-        throw new AppError('Grupo de clientes não encontrado', 404)
+        // Criar grupo de clientes automaticamente se não existir
+        const createGroupUseCase = new CreateAccessGroupUseCase(accessGroupRepository)
+        clientGroup = await createGroupUseCase.execute({
+          code: 'CLIENTES',
+          name: 'Clientes',
+          description: 'Grupo padrão para clientes do sistema',
+          features: [],
+          createdBy: 'system',
+        })
       }
 
       // Verificar se já existe usuário com esse login ou email
@@ -109,18 +118,15 @@ export class UserController {
         throw new AppError('E-mail já está em uso', 409)
       }
 
-      // Criar usuário cliente
+      // Criar usuário cliente com senha (para não enviar email de setup)
       const user = await this.createUser.execute({
         fullName: login.trim(),
         login: login.trim(),
         email: email.trim().toLowerCase(),
         groupIds: [clientGroup.id],
         createdBy: 'system',
+        password: senha, // Passar senha no payload para evitar envio de email
       })
-
-      // Definir senha diretamente
-      const hashedPassword = await hashPassword(senha)
-      await userRepository.updatePassword(user.id, hashedPassword)
 
       return res.status(201).json({
         id: user.id,
