@@ -388,6 +388,14 @@
     ]
   },
   {
+    "key": "erp:clientes:listar-movimentacoes",
+    "name": "Clientes: Listar Movimentações",
+    "description": "Permite listar o histórico de movimentações de pontos de um cliente.",
+    "api-routes": [
+      "api-clientes:get:/clientes/:schema/:id/pontos-movimentacoes"
+    ]
+  },
+  {
     "key": "erp:clientes:creditar-pontos",
     "name": "Clientes: Creditar Pontos",
     "description": "Permite creditar pontos a um cliente.",
@@ -425,6 +433,14 @@
     "description": "Permite marcar um código de resgate como utilizado.",
     "api-routes": [
       "api-clientes:put:/clientes/:schema/:id/pontos/:codigoResgate"
+    ]
+  },
+  {
+    "key": "erp:clientes:visualizar-detalhes-resgate",
+    "name": "Clientes: Visualizar Detalhes do Resgate",
+    "description": "Permite visualizar os detalhes completos de um resgate.",
+    "api-routes": [
+      "api-clientes:get:/clientes/:schema/resgates/:idResgate"
     ]
   }
 ]
