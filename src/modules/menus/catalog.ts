@@ -8,6 +8,7 @@ export interface MenuDefinition {
     description: string
     url: string
     icon: string
+    children?: MenuDefinition[]
 }
 
 const catalog = (rawCatalog as MenuDefinition[]).map((menu) => ({

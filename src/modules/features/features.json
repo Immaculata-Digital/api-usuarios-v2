@@ -442,5 +442,28 @@
     "api-routes": [
       "api-clientes:get:/clientes/:schema/resgates/:idResgate"
     ]
+  },
+  {
+    "key": "erp:configuracoes-globais:menu",
+    "name": "Configurações Globais: Menu",
+    "description": "Permite visualizar o menu de configurações globais.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:configuracoes-globais:visualizar",
+    "name": "Configurações Globais: Visualizar",
+    "description": "Permite visualizar as configurações globais do sistema.",
+    "api-routes": [
+      "api-admin:get:/:schema/configuracoes-globais"
+    ]
+  },
+  {
+    "key": "erp:configuracoes-globais:editar",
+    "name": "Configurações Globais: Editar",
+    "description": "Permite alterar as configurações globais do sistema (logo, cores, fontes).",
+    "api-routes": [
+      "api-admin:post:/:schema/configuracoes-globais",
+      "api-admin:put:/:schema/configuracoes-globais/:id"
+    ]
   }
 ]

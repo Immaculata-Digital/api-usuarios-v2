@@ -15,7 +15,6 @@ const featureSchema = z
         message: `Funcionalidade precisa existir no catálogo (${FEATURE_KEYS.join(', ')})`,
       }),
   )
-  .max(50)
   .optional()
 
 export const createUserSchema = z.object({
@@ -66,8 +65,7 @@ export const updateUserPermissionsSchema = z.object({
         .refine((value) => isValidFeatureKey(value), {
           message: `Funcionalidade precisa existir no catálogo (${FEATURE_KEYS.join(', ')})`,
         }),
-    )
-    .max(50),
+    ),
   deniedFeatures: z
     .array(
       z
@@ -77,8 +75,7 @@ export const updateUserPermissionsSchema = z.object({
         .refine((value) => isValidFeatureKey(value), {
           message: `Funcionalidade precisa existir no catálogo (${FEATURE_KEYS.join(', ')})`,
         }),
-    )
-    .max(50),
+    ),
   updatedBy: z.string().min(3),
 })
 

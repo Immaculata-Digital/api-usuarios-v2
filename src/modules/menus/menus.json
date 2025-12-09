@@ -58,5 +58,13 @@
         "description": "Administração de itens de recompensa",
         "url": "/itens-recompensa",
         "icon": "Stars"
+    },
+    {
+        "key": "erp:configuracoes-globais:menu",
+        "category": "Sistema",
+        "name": "Configurações Globais",
+        "description": "Configurações globais do sistema (logo, cores, fontes)",
+        "url": "/configuracoes",
+        "icon": "Settings"
     }
 ]

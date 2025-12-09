@@ -16,7 +16,6 @@ const featuresSchema = z
         message: `Funcionalidade precisa existir no catálogo (${FEATURE_KEYS.join(', ')})`,
       }),
   )
-  .max(50)
   .optional()
 
 const codeSchema = z
