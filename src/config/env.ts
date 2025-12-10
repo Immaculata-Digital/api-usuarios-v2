@@ -22,7 +22,7 @@ export const env = {
     cryptoSecret: process.env.CRYPTO_SECRET ?? 'default-crypto-secret',
   },
   apiComunicacoes: {
-    url: process.env.API_COMUNICACOES_URL ?? 'http://localhost:3334/api',
+    url: process.env.API_COMUNICACOES_URL ?? 'http://localhost:3336/api',
   },
 }
 

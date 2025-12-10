@@ -66,5 +66,31 @@
         "description": "Configurações globais do sistema (logo, cores, fontes)",
         "url": "/configuracoes",
         "icon": "Settings"
+    },
+    {
+        "key": "erp:comunicacoes:menu",
+        "category": "Comunicações",
+        "name": "Comunicações",
+        "description": "Gestão de comunicações, SMTP e campanhas",
+        "url": "#",
+        "icon": "Email",
+        "children": [
+            {
+                "key": "erp:remetentes-smtp:menu",
+                "category": "Comunicações",
+                "name": "Configurações SMTP",
+                "description": "Administração de configurações SMTP",
+                "url": "/remetentes-smtp",
+                "icon": "Settings"
+            },
+            {
+                "key": "erp:campanhas-disparo:menu",
+                "category": "Comunicações",
+                "name": "Campanhas de Disparo",
+                "description": "Administração de campanhas de disparo",
+                "url": "/campanhas-disparo",
+                "icon": "Send"
+            }
+        ]
     }
 ]

@@ -465,5 +465,97 @@
       "api-admin:post:/:schema/configuracoes-globais",
       "api-admin:put:/:schema/configuracoes-globais/:id"
     ]
+  },
+  {
+    "key": "erp:remetentes-smtp:menu",
+    "name": "Remetentes SMTP: Menu",
+    "description": "Permite visualizar o menu de remetentes SMTP.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:remetentes-smtp:listar",
+    "name": "Remetentes SMTP: Listar",
+    "description": "Permite visualizar a listagem de remetentes SMTP.",
+    "api-routes": [
+      "api-comunicacoes:get:/:schema/remetentes-smtp"
+    ]
+  },
+  {
+    "key": "erp:remetentes-smtp:visualizar",
+    "name": "Remetentes SMTP: Visualizar",
+    "description": "Permite visualizar os detalhes completos de um remetente SMTP.",
+    "api-routes": [
+      "api-comunicacoes:get:/:schema/remetentes-smtp/:id"
+    ]
+  },
+  {
+    "key": "erp:remetentes-smtp:criar",
+    "name": "Remetentes SMTP: Criar",
+    "description": "Permite cadastrar novos remetentes SMTP.",
+    "api-routes": [
+      "api-comunicacoes:post:/:schema/remetentes-smtp"
+    ]
+  },
+  {
+    "key": "erp:remetentes-smtp:editar",
+    "name": "Remetentes SMTP: Editar",
+    "description": "Permite alterar informações de remetentes SMTP existentes.",
+    "api-routes": [
+      "api-comunicacoes:put:/:schema/remetentes-smtp/:id"
+    ]
+  },
+  {
+    "key": "erp:remetentes-smtp:excluir",
+    "name": "Remetentes SMTP: Excluir",
+    "description": "Permite excluir remetentes SMTP.",
+    "api-routes": [
+      "api-comunicacoes:delete:/:schema/remetentes-smtp/:id"
+    ]
+  },
+  {
+    "key": "erp:campanhas-disparo:menu",
+    "name": "Campanhas de Disparo: Menu",
+    "description": "Permite visualizar o menu de campanhas de disparo.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:campanhas-disparo:listar",
+    "name": "Campanhas de Disparo: Listar",
+    "description": "Permite visualizar a listagem de campanhas de disparo.",
+    "api-routes": [
+      "api-comunicacoes:get:/:schema/campanhas-disparo"
+    ]
+  },
+  {
+    "key": "erp:campanhas-disparo:visualizar",
+    "name": "Campanhas de Disparo: Visualizar",
+    "description": "Permite visualizar os detalhes completos de uma campanha de disparo.",
+    "api-routes": [
+      "api-comunicacoes:get:/:schema/campanhas-disparo/:id"
+    ]
+  },
+  {
+    "key": "erp:campanhas-disparo:criar",
+    "name": "Campanhas de Disparo: Criar",
+    "description": "Permite cadastrar novas campanhas de disparo.",
+    "api-routes": [
+      "api-comunicacoes:post:/:schema/campanhas-disparo"
+    ]
+  },
+  {
+    "key": "erp:campanhas-disparo:editar",
+    "name": "Campanhas de Disparo: Editar",
+    "description": "Permite alterar informações de campanhas de disparo existentes.",
+    "api-routes": [
+      "api-comunicacoes:put:/:schema/campanhas-disparo/:id"
+    ]
+  },
+  {
+    "key": "erp:campanhas-disparo:excluir",
+    "name": "Campanhas de Disparo: Excluir",
+    "description": "Permite excluir campanhas de disparo.",
+    "api-routes": [
+      "api-comunicacoes:delete:/:schema/campanhas-disparo/:id"
+    ]
   }
 ]

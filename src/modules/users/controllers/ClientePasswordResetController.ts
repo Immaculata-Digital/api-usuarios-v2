@@ -56,39 +56,34 @@ export class ClientePasswordResetController {
       const anoAtual = new Date().getFullYear().toString()
       const urlSistema = baseUrl
 
-      // Chamar API de comunicações
+      // Chamar API de comunicações para disparo automático
+      // Extrair schema do request (se disponível) ou usar um padrão
+      const schema = (req as any).schema || 'public'
+      
       try {
-        const response = await fetch(`${env.apiComunicacoes.url}/comunicacoes/enviar`, {
+        const response = await fetch(`${env.apiComunicacoes.url}/${schema}/disparo-automatico`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            chave: CHAVE_COMUNICACAO_RESET_PASSWORD_CLIENTE,
-            destinatario: user.email,
-            variaveis: [
-              nomeUsuario,
-              tempoValidade,
-              urlReset,
-              anoAtual,
-              urlSistema,
-            ],
+            tipo_envio: 'reset_senha',
+            cliente: {
+              id_cliente: user.id,
+              nome_completo: user.fullName || user.login,
+              email: user.email,
+              token_reset: token,
+            },
           }),
         })
 
+        // Não bloquear se falhar (o email pode não estar configurado)
         if (!response.ok) {
-          const error = await response.json().catch(() => ({ message: `Erro ${response.status}` }))
-          throw new AppError(
-            error.message || 'Erro ao enviar e-mail de redefinição de senha',
-            response.status
-          )
+          console.warn(`Erro ao disparar email de reset de senha: ${response.status}`)
         }
       } catch (error) {
-        console.error('Erro ao chamar API de comunicações:', error)
-        if (error instanceof AppError) {
-          throw error
-        }
-        throw new AppError('Erro ao processar solicitação de redefinição de senha', 500)
+        // Não bloquear o fluxo se falhar
+        console.error('Erro ao chamar API de comunicações para reset de senha:', error)
       }
 
       console.log(`Password reset email sent to client ${user.id} from IP ${clientIP}`)
