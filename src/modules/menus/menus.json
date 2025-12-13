@@ -62,7 +62,7 @@
     {
         "key": "erp:configuracoes-globais:menu",
         "category": "Sistema",
-        "name": "Configurações Globais",
+        "name": "Área do Cliente",
         "description": "Configurações globais do sistema (logo, cores, fontes)",
         "url": "/configuracoes",
         "icon": "Settings"
@@ -81,7 +81,7 @@
                 "name": "Configurações SMTP",
                 "description": "Administração de configurações SMTP",
                 "url": "/remetentes-smtp",
-                "icon": "Settings"
+                "icon": "SettingsMail"
             },
             {
                 "key": "erp:campanhas-disparo:menu",
