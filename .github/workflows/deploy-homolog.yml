@@ -69,11 +69,11 @@ jobs:
             --name ${IMAGE_NAME}-homolog \
             --restart unless-stopped \
             -p "${{ secrets.PORT }}:${{ secrets.PORT }}" \
-            -e DB_HOST='${{ secrets.DB_HOST }}' \
-            -e DB_PORT='${{ secrets.DB_PORT }}' \
-            -e DB_NAME='${{ secrets.DB_NAME }}' \
-            -e DB_USER='${{ secrets.DB_USER }}' \
-            -e DB_PASS='${{ secrets.DB_PASS }}' \
+            -e DB_HOST='${{ secrets.DB_HOST_HOMOLOG }}' \
+            -e DB_PORT='${{ secrets.DB_PORT_HOMOLOG }}' \
+            -e DB_NAME='${{ secrets.DB_NAME_HOMOLOG }}' \
+            -e DB_USER='${{ secrets.DB_USER_HOMOLOG }}' \
+            -e DB_PASS='${{ secrets.DB_PASS_HOMOLOG }}' \
             -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
             -e JWT_REFRESH_SECRET='${{ secrets.JWT_REFRESH_SECRET }}' \
             -e JWT_ISS='${{ secrets.JWT_ISS }}' \
@@ -84,7 +84,7 @@ jobs:
             -e BCRYPT_SALT_ROUNDS='${{ secrets.BCRYPT_SALT_ROUNDS }}' \
             -e CORS_ORIGINS='${{ secrets.CORS_ORIGINS }}' \
             -e LOG_LEVEL='${{ secrets.LOG_LEVEL }}' \
-            -e API_COMUNICACOES_URL='${{ secrets.VITE_API_COMUNICACOES_BASE_URL_HOMOLOG }}' \
+            -e API_COMUNICACOES_URL='${{ secrets.VITE_API_COMUNICACOES_URL_HOMOLOG }}' \
             -e PORT='${{ secrets.PORT }}' \
             ghcr.io/${REPO_OWNER_LOWER}/${IMAGE_NAME}:homolog
 
