@@ -1,0 +1,89 @@
+name: Deploy API Usuários - Homolog
+
+on:
+  push:
+    branches:
+      - homolog
+
+jobs:
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Configurar chave SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copiar projeto para o servidor
+        run: |
+          rsync -avz --delete \
+            --exclude 'node_modules' \
+            --exclude '.git' \
+            --exclude 'dist' \
+            -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_DEPLOY_PATH }}
+
+      - name: Buildar imagem e reiniciar container
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "DEPLOY_PATH='${{ secrets.VPS_DEPLOY_PATH }}' \
+            DB_HOST='${{ secrets.DB_HOST }}' \
+            DB_PORT='${{ secrets.DB_PORT }}' \
+            DB_NAME='${{ secrets.DB_NAME }}' \
+            DB_USER='${{ secrets.DB_USER }}' \
+            DB_PASS='${{ secrets.DB_PASS }}' \
+            JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+            JWT_REFRESH_SECRET='${{ secrets.JWT_REFRESH_SECRET }}' \
+            JWT_ISS='${{ secrets.JWT_ISS }}' \
+            JWT_AUD='${{ secrets.JWT_AUD }}' \
+            JWT_ALG='${{ secrets.JWT_ALG }}' \
+            ACCESS_TOKEN_TTL='${{ secrets.ACCESS_TOKEN_TTL }}' \
+            REFRESH_TOKEN_TTL='${{ secrets.REFRESH_TOKEN_TTL }}' \
+            BCRYPT_SALT_ROUNDS='${{ secrets.BCRYPT_SALT_ROUNDS }}' \
+            CORS_ORIGINS='${{ secrets.CORS_ORIGINS }}' \
+            LOG_LEVEL='${{ secrets.LOG_LEVEL }}' \
+            API_COMUNICACOES_URL='${{ secrets.VITE_API_COMUNICACOES_BASE_URL_HOMOLOG }}' \
+            PORT='${{ secrets.PORT }}' \
+            bash -s" << 'EOF'
+            set -e
+            cd "$DEPLOY_PATH"
+
+            docker build -t api-usuarios \
+              --build-arg PORT="$PORT" \
+              --build-arg DB_HOST="$DB_HOST" \
+              --build-arg DB_PORT="$DB_PORT" \
+              --build-arg DB_NAME="$DB_NAME" \
+              --build-arg DB_USER="$DB_USER" \
+              --build-arg DB_PASS="$DB_PASS" \
+              --build-arg JWT_SECRET="$JWT_SECRET" \
+              --build-arg JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET" \
+              --build-arg JWT_ISS="$JWT_ISS" \
+              --build-arg JWT_AUD="$JWT_AUD" \
+              --build-arg JWT_ALG="$JWT_ALG" \
+              --build-arg ACCESS_TOKEN_TTL="$ACCESS_TOKEN_TTL" \
+              --build-arg REFRESH_TOKEN_TTL="$REFRESH_TOKEN_TTL" \
+              --build-arg BCRYPT_SALT_ROUNDS="$BCRYPT_SALT_ROUNDS" \
+              --build-arg CORS_ORIGINS="$CORS_ORIGINS" \
+              --build-arg LOG_LEVEL="$LOG_LEVEL" \
+              --build-arg API_COMUNICACOES_URL="$API_COMUNICACOES_URL" \
+              .
+
+            docker stop api-usuarios || true
+            docker rm api-usuarios || true
+            docker run -d \
+              --name api-usuarios \
+              -p "$PORT":"$PORT" \
+              --restart unless-stopped \
+              api-usuarios
+
+            docker image prune -f || true
+          EOF
+
