@@ -27,11 +27,13 @@ jobs:
 
       - name: Build imagem
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/api-usuarios:homolog .
+          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker build -t ghcr.io/${REPO_OWNER_LOWER}/api-usuarios:homolog .
 
       - name: Push imagem
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/api-usuarios:homolog
+          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker push ghcr.io/${REPO_OWNER_LOWER}/api-usuarios:homolog
 
   deploy:
     name: Pull & Run on Server
@@ -41,11 +43,13 @@ jobs:
     steps:
       - name: Login GHCR (no servidor)
         run: |
-          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${REPO_OWNER_LOWER} --password-stdin
 
       - name: Pull da nova imagem
         run: |
-          docker pull ghcr.io/${{ github.repository_owner }}/api-usuarios:homolog
+          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker pull ghcr.io/${REPO_OWNER_LOWER}/api-usuarios:homolog
 
       - name: Parar e remover container antigo
         run: |
@@ -54,6 +58,7 @@ jobs:
 
       - name: Subir container novo
         run: |
+          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           docker run -d \
             --name api-usuarios-homolog \
             --restart unless-stopped \
@@ -75,7 +80,7 @@ jobs:
             -e LOG_LEVEL='${{ secrets.LOG_LEVEL }}' \
             -e API_COMUNICACOES_URL='${{ secrets.VITE_API_COMUNICACOES_BASE_URL_HOMOLOG }}' \
             -e PORT='${{ secrets.PORT }}' \
-            ghcr.io/${{ github.repository_owner }}/api-usuarios:homolog
+            ghcr.io/${REPO_OWNER_LOWER}/api-usuarios:homolog
 
       - name: Limpeza de imagens antigas
         run: |
