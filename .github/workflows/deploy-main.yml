@@ -14,20 +14,38 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v3
 
-      - name: Configurar chave SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-          passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
+      - name: Instalar expect
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y expect
 
-      - name: Adicionar servidor aos known_hosts
+      - name: Configurar chave SSH com passphrase
         run: |
           mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+          
+          # Adiciona a chave ao ssh-agent usando expect para fornecer a passphrase
+          eval "$(ssh-agent -s)"
+          expect << EOF
+            spawn ssh-add ~/.ssh/id_rsa
+            expect "Enter passphrase"
+            send "${{ secrets.VPS_SSH_PASSPHRASE }}\r"
+            expect eof
+          EOF
 
       - name: Copiar projeto para o servidor
         run: |
+          eval "$(ssh-agent -s)"
+          expect << EOF
+            spawn ssh-add ~/.ssh/id_rsa
+            expect "Enter passphrase"
+            send "${{ secrets.VPS_SSH_PASSPHRASE }}\r"
+            expect eof
+          EOF
+          
           rsync -avz --delete \
             --exclude 'node_modules' \
             --exclude '.git' \
@@ -37,6 +55,14 @@ jobs:
 
       - name: Buildar imagem e reiniciar container
         run: |
+          eval "$(ssh-agent -s)"
+          expect << EOF
+            spawn ssh-add ~/.ssh/id_rsa
+            expect "Enter passphrase"
+            send "${{ secrets.VPS_SSH_PASSPHRASE }}\r"
+            expect eof
+          EOF
+          
           ssh -o StrictHostKeyChecking=no \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             "DEPLOY_PATH='${{ secrets.VPS_DEPLOY_PATH }}' \
