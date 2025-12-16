@@ -9,6 +9,7 @@ Este documento lista todas as secrets que devem ser configuradas no GitHub Actio
 | `VPS_HOST` | Hostname ou IP do servidor VPS | `192.168.1.100` ou `servidor.exemplo.com` |
 | `VPS_USER` | Usuário SSH para acesso ao servidor | `root` ou `deploy` |
 | `VPS_SSH_PRIVATE_KEY` | Chave privada SSH para autenticação | Conteúdo completo da chave privada |
+| `VPS_SSH_PASSPHRASE` | Passphrase (senha) da chave privada SSH | `sua-senha-da-chave-ssh` |
 | `VPS_DEPLOY_PATH` | Caminho no servidor onde o projeto será deployado | `/var/www/api-usuarios-v2` |
 
 ## Secrets de Banco de Dados
