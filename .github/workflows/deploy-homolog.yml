@@ -1,74 +1,82 @@
-name: Deploy API Usuários - Homolog
+name: Build and Deploy - API Usuários Homolog
 
 on:
   push:
-    branches:
-      - homolog
+    branches: [ "homolog" ]
+  workflow_dispatch:
 
 jobs:
-  deploy:
-    name: Deploy via SSH
+  build_and_push:
+    name: Build & Push Image to GHCR
     runs-on: ubuntu-latest
 
-    env:
-      APP_NAME: api-usuarios
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v3
 
-      - name: Configurar SSH
+      - name: Login GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build imagem
         run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf '%s' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ecdsa
-          chmod 600 ~/.ssh/id_ecdsa
-          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
+          docker build -t ghcr.io/${{ github.repository_owner }}/api-usuarios:homolog .
 
-      - name: Sincronizar código para o servidor
+      - name: Push imagem
         run: |
-          rsync -avz --delete \
-            --exclude node_modules \
-            --exclude .git \
-            --exclude dist \
-            -e "ssh -i ~/.ssh/id_ecdsa" \
-            ./ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_DEPLOY_PATH }}"
+          docker push ghcr.io/${{ github.repository_owner }}/api-usuarios:homolog
 
-      - name: Build + restart container
+  deploy:
+    name: Pull & Run on Server
+    runs-on: self-hosted
+    needs: build_and_push
+
+    steps:
+      - name: Login GHCR (no servidor)
         run: |
-          ssh -i ~/.ssh/id_ecdsa "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << EOF
-            set -e
-            cd "${{ secrets.VPS_DEPLOY_PATH }}"
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
-            docker build -t "${{ env.APP_NAME }}:homolog" .
+      - name: Pull da nova imagem
+        run: |
+          docker pull ghcr.io/${{ github.repository_owner }}/api-usuarios:homolog
 
-            docker stop "${{ env.APP_NAME }}-homolog" || true
-            docker rm "${{ env.APP_NAME }}-homolog" || true
+      - name: Parar e remover container antigo
+        run: |
+          docker stop api-usuarios-homolog || true
+          docker rm api-usuarios-homolog || true
 
-            docker run -d \
-              --name "${{ env.APP_NAME }}-homolog" \
-              --restart unless-stopped \
-              -p "${{ secrets.PORT }}:${{ secrets.PORT }}" \
-              -e DB_HOST='${{ secrets.DB_HOST }}' \
-              -e DB_PORT='${{ secrets.DB_PORT }}' \
-              -e DB_NAME='${{ secrets.DB_NAME }}' \
-              -e DB_USER='${{ secrets.DB_USER }}' \
-              -e DB_PASS='${{ secrets.DB_PASS }}' \
-              -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
-              -e JWT_REFRESH_SECRET='${{ secrets.JWT_REFRESH_SECRET }}' \
-              -e JWT_ISS='${{ secrets.JWT_ISS }}' \
-              -e JWT_AUD='${{ secrets.JWT_AUD }}' \
-              -e JWT_ALG='${{ secrets.JWT_ALG }}' \
-              -e ACCESS_TOKEN_TTL='${{ secrets.ACCESS_TOKEN_TTL }}' \
-              -e REFRESH_TOKEN_TTL='${{ secrets.REFRESH_TOKEN_TTL }}' \
-              -e BCRYPT_SALT_ROUNDS='${{ secrets.BCRYPT_SALT_ROUNDS }}' \
-              -e CORS_ORIGINS='${{ secrets.CORS_ORIGINS }}' \
-              -e LOG_LEVEL='${{ secrets.LOG_LEVEL }}' \
-              -e API_COMUNICACOES_URL='${{ secrets.VITE_API_COMUNICACOES_BASE_URL_HOMOLOG }}' \
-              -e PORT='${{ secrets.PORT }}' \
-              "${{ env.APP_NAME }}:homolog"
+      - name: Subir container novo
+        run: |
+          docker run -d \
+            --name api-usuarios-homolog \
+            --restart unless-stopped \
+            -p "${{ secrets.PORT }}:${{ secrets.PORT }}" \
+            -e DB_HOST='${{ secrets.DB_HOST }}' \
+            -e DB_PORT='${{ secrets.DB_PORT }}' \
+            -e DB_NAME='${{ secrets.DB_NAME }}' \
+            -e DB_USER='${{ secrets.DB_USER }}' \
+            -e DB_PASS='${{ secrets.DB_PASS }}' \
+            -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+            -e JWT_REFRESH_SECRET='${{ secrets.JWT_REFRESH_SECRET }}' \
+            -e JWT_ISS='${{ secrets.JWT_ISS }}' \
+            -e JWT_AUD='${{ secrets.JWT_AUD }}' \
+            -e JWT_ALG='${{ secrets.JWT_ALG }}' \
+            -e ACCESS_TOKEN_TTL='${{ secrets.ACCESS_TOKEN_TTL }}' \
+            -e REFRESH_TOKEN_TTL='${{ secrets.REFRESH_TOKEN_TTL }}' \
+            -e BCRYPT_SALT_ROUNDS='${{ secrets.BCRYPT_SALT_ROUNDS }}' \
+            -e CORS_ORIGINS='${{ secrets.CORS_ORIGINS }}' \
+            -e LOG_LEVEL='${{ secrets.LOG_LEVEL }}' \
+            -e API_COMUNICACOES_URL='${{ secrets.VITE_API_COMUNICACOES_BASE_URL_HOMOLOG }}' \
+            -e PORT='${{ secrets.PORT }}' \
+            ghcr.io/${{ github.repository_owner }}/api-usuarios:homolog
 
-            docker image prune -f || true
-          EOF
-
+      - name: Limpeza de imagens antigas
+        run: |
+          docker image prune -f || true
