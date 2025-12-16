@@ -58,10 +58,10 @@ export class RequestPasswordResetUseCase {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: `Erro ${response.status}` }))
-        throw new AppError(
-          error.message || 'Erro ao enviar e-mail de redefinição de senha',
-          response.status
-        )
+        const errorMessage = (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') 
+          ? error.message 
+          : 'Erro ao enviar e-mail de redefinição de senha'
+        throw new AppError(errorMessage, response.status)
       }
     } catch (error) {
       // Se for erro de rede ou da API, loga mas não revela ao usuário

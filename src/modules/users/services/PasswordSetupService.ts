@@ -42,7 +42,10 @@ export class PasswordSetupService {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: `Erro ${response.status}` }))
-        throw new Error(error.message || 'Erro ao enviar e-mail de redefinição de senha')
+        const errorMessage = (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') 
+          ? error.message 
+          : 'Erro ao enviar e-mail de redefinição de senha'
+        throw new Error(errorMessage)
       }
     } catch (error) {
       console.error('Erro ao chamar API de comunicações:', error)

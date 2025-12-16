@@ -98,7 +98,6 @@ export class UserController {
         clientGroup = await createGroupUseCase.execute({
           code: 'CLIENTES',
           name: 'Clientes',
-          description: 'Grupo padrão para clientes do sistema',
           features: [],
           createdBy: 'system',
         })
