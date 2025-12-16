@@ -10,173 +10,64 @@ jobs:
     name: Deploy via SSH
     runs-on: ubuntu-latest
 
+    env:
+      APP_NAME: api-usuarios
+
     steps:
       - name: Checkout do código
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Instalar expect
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y expect
-
-      - name: Configurar chave SSH com passphrase
+      - name: Configurar SSH
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          
-          # Escreve a chave SSH preservando quebras de linha
-          printf '%s' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          
-          # Verifica se o arquivo foi criado e tem conteúdo
-          if [ ! -f ~/.ssh/id_rsa ] || [ ! -s ~/.ssh/id_rsa ]; then
-            echo "Erro: arquivo id_rsa não foi criado ou está vazio"
-            ls -la ~/.ssh/ || true
-            exit 1
-          fi
-          
+          printf '%s' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ecdsa
+          chmod 600 ~/.ssh/id_ecdsa
           ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          
-          # Adiciona a chave ao ssh-agent usando expect para fornecer a passphrase
-          eval "$(ssh-agent -s)"
-          export VPS_SSH_PASSPHRASE='${{ secrets.VPS_SSH_PASSPHRASE }}'
-          expect <<'EXPECT_EOF'
-            set timeout -1
-            spawn ssh-add $env(HOME)/.ssh/id_rsa
-            expect {
-              -re "Enter passphrase.*:" {
-                send "$env(VPS_SSH_PASSPHRASE)\r"
-                exp_continue
-              }
-              eof
-            }
-          EXPECT_EOF
 
-      - name: Copiar projeto para o servidor
+      - name: Sincronizar código para o servidor
         run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          
-          # Escreve a chave SSH preservando quebras de linha
-          printf '%s' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          
-          # Verifica se o arquivo foi criado e tem conteúdo
-          if [ ! -f ~/.ssh/id_rsa ] || [ ! -s ~/.ssh/id_rsa ]; then
-            echo "Erro: arquivo id_rsa não foi criado ou está vazio"
-            ls -la ~/.ssh/ || true
-            exit 1
-          fi
-          
-          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-          
-          eval "$(ssh-agent -s)"
-          export VPS_SSH_PASSPHRASE='${{ secrets.VPS_SSH_PASSPHRASE }}'
-          expect <<'EXPECT_EOF'
-            set timeout -1
-            spawn ssh-add $env(HOME)/.ssh/id_rsa
-            expect {
-              -re "Enter passphrase.*:" {
-                send "$env(VPS_SSH_PASSPHRASE)\r"
-                exp_continue
-              }
-              eof
-            }
-          EXPECT_EOF
-          
           rsync -avz --delete \
-            --exclude 'node_modules' \
-            --exclude '.git' \
-            --exclude 'dist' \
-            -e "ssh -o StrictHostKeyChecking=no" \
+            --exclude node_modules \
+            --exclude .git \
+            --exclude dist \
+            -e "ssh -i ~/.ssh/id_ecdsa" \
             ./ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_DEPLOY_PATH }}"
 
-      - name: Buildar imagem e reiniciar container
+      - name: Build + restart container
         run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          
-          # Escreve a chave SSH preservando quebras de linha
-          printf '%s' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          
-          # Verifica se o arquivo foi criado e tem conteúdo
-          if [ ! -f ~/.ssh/id_rsa ] || [ ! -s ~/.ssh/id_rsa ]; then
-            echo "Erro: arquivo id_rsa não foi criado ou está vazio"
-            ls -la ~/.ssh/ || true
-            exit 1
-          fi
-          
-          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-          
-          eval "$(ssh-agent -s)"
-          export VPS_SSH_PASSPHRASE='${{ secrets.VPS_SSH_PASSPHRASE }}'
-          expect <<'EXPECT_EOF'
-            set timeout -1
-            spawn ssh-add $env(HOME)/.ssh/id_rsa
-            expect {
-              -re "Enter passphrase.*:" {
-                send "$env(VPS_SSH_PASSPHRASE)\r"
-                exp_continue
-              }
-              eof
-            }
-          EXPECT_EOF
-          
-          ssh -o StrictHostKeyChecking=no \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "DEPLOY_PATH='${{ secrets.VPS_DEPLOY_PATH }}' \
-            DB_HOST='${{ secrets.DB_HOST }}' \
-            DB_PORT='${{ secrets.DB_PORT }}' \
-            DB_NAME='${{ secrets.DB_NAME }}' \
-            DB_USER='${{ secrets.DB_USER }}' \
-            DB_PASS='${{ secrets.DB_PASS }}' \
-            JWT_SECRET='${{ secrets.JWT_SECRET }}' \
-            JWT_REFRESH_SECRET='${{ secrets.JWT_REFRESH_SECRET }}' \
-            JWT_ISS='${{ secrets.JWT_ISS }}' \
-            JWT_AUD='${{ secrets.JWT_AUD }}' \
-            JWT_ALG='${{ secrets.JWT_ALG }}' \
-            ACCESS_TOKEN_TTL='${{ secrets.ACCESS_TOKEN_TTL }}' \
-            REFRESH_TOKEN_TTL='${{ secrets.REFRESH_TOKEN_TTL }}' \
-            BCRYPT_SALT_ROUNDS='${{ secrets.BCRYPT_SALT_ROUNDS }}' \
-            CORS_ORIGINS='${{ secrets.CORS_ORIGINS }}' \
-            LOG_LEVEL='${{ secrets.LOG_LEVEL }}' \
-            API_COMUNICACOES_URL='${{ secrets.VITE_API_COMUNICACOES_BASE_URL_HOMOLOG }}' \
-            PORT='${{ secrets.PORT }}' \
-            bash -s" << 'EOF'
+          ssh -i ~/.ssh/id_ecdsa "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << EOF
             set -e
-            cd "$DEPLOY_PATH"
+            cd "${{ secrets.VPS_DEPLOY_PATH }}"
 
-            docker build -t api-usuarios \
-              --build-arg PORT="$PORT" \
-              --build-arg DB_HOST="$DB_HOST" \
-              --build-arg DB_PORT="$DB_PORT" \
-              --build-arg DB_NAME="$DB_NAME" \
-              --build-arg DB_USER="$DB_USER" \
-              --build-arg DB_PASS="$DB_PASS" \
-              --build-arg JWT_SECRET="$JWT_SECRET" \
-              --build-arg JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET" \
-              --build-arg JWT_ISS="$JWT_ISS" \
-              --build-arg JWT_AUD="$JWT_AUD" \
-              --build-arg JWT_ALG="$JWT_ALG" \
-              --build-arg ACCESS_TOKEN_TTL="$ACCESS_TOKEN_TTL" \
-              --build-arg REFRESH_TOKEN_TTL="$REFRESH_TOKEN_TTL" \
-              --build-arg BCRYPT_SALT_ROUNDS="$BCRYPT_SALT_ROUNDS" \
-              --build-arg CORS_ORIGINS="$CORS_ORIGINS" \
-              --build-arg LOG_LEVEL="$LOG_LEVEL" \
-              --build-arg API_COMUNICACOES_URL="$API_COMUNICACOES_URL" \
-              .
+            docker build -t "${{ env.APP_NAME }}:homolog" .
 
-            docker stop api-usuarios || true
-            docker rm api-usuarios || true
+            docker stop "${{ env.APP_NAME }}-homolog" || true
+            docker rm "${{ env.APP_NAME }}-homolog" || true
+
             docker run -d \
-              --name api-usuarios \
-              -p "$PORT":"$PORT" \
+              --name "${{ env.APP_NAME }}-homolog" \
               --restart unless-stopped \
-              api-usuarios
+              -p "${{ secrets.PORT }}:${{ secrets.PORT }}" \
+              -e DB_HOST='${{ secrets.DB_HOST }}' \
+              -e DB_PORT='${{ secrets.DB_PORT }}' \
+              -e DB_NAME='${{ secrets.DB_NAME }}' \
+              -e DB_USER='${{ secrets.DB_USER }}' \
+              -e DB_PASS='${{ secrets.DB_PASS }}' \
+              -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+              -e JWT_REFRESH_SECRET='${{ secrets.JWT_REFRESH_SECRET }}' \
+              -e JWT_ISS='${{ secrets.JWT_ISS }}' \
+              -e JWT_AUD='${{ secrets.JWT_AUD }}' \
+              -e JWT_ALG='${{ secrets.JWT_ALG }}' \
+              -e ACCESS_TOKEN_TTL='${{ secrets.ACCESS_TOKEN_TTL }}' \
+              -e REFRESH_TOKEN_TTL='${{ secrets.REFRESH_TOKEN_TTL }}' \
+              -e BCRYPT_SALT_ROUNDS='${{ secrets.BCRYPT_SALT_ROUNDS }}' \
+              -e CORS_ORIGINS='${{ secrets.CORS_ORIGINS }}' \
+              -e LOG_LEVEL='${{ secrets.LOG_LEVEL }}' \
+              -e API_COMUNICACOES_URL='${{ secrets.VITE_API_COMUNICACOES_BASE_URL_HOMOLOG }}' \
+              -e PORT='${{ secrets.PORT }}' \
+              "${{ env.APP_NAME }}:homolog"
 
             docker image prune -f || true
           EOF
