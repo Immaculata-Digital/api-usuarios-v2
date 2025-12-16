@@ -38,6 +38,11 @@ jobs:
 
       - name: Copiar projeto para o servidor
         run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+          
           eval "$(ssh-agent -s)"
           expect << EOF
             spawn ssh-add ~/.ssh/id_rsa
@@ -55,6 +60,11 @@ jobs:
 
       - name: Buildar imagem e reiniciar container
         run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+          
           eval "$(ssh-agent -s)"
           expect << EOF
             spawn ssh-add ~/.ssh/id_rsa
