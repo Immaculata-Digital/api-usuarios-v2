@@ -68,7 +68,7 @@ jobs:
           docker run -d \
             --name ${IMAGE_NAME}-homolog \
             --restart unless-stopped \
-            -p "${{ secrets.PORT }}:${{ secrets.PORT }}" \
+            -p 5333:5333 \
             -e DB_HOST='${{ secrets.DB_HOST_HOMOLOG }}' \
             -e DB_PORT='${{ secrets.DB_PORT_HOMOLOG }}' \
             -e DB_NAME='${{ secrets.DB_NAME_HOMOLOG }}' \
@@ -85,7 +85,7 @@ jobs:
             -e CORS_ORIGINS='${{ secrets.CORS_ORIGINS }}' \
             -e LOG_LEVEL='${{ secrets.LOG_LEVEL }}' \
             -e API_COMUNICACOES_URL='${{ secrets.VITE_API_COMUNICACOES_URL_HOMOLOG }}' \
-            -e PORT='${{ secrets.PORT }}' \
+            -e PORT='5333' \
             ghcr.io/${REPO_OWNER_LOWER}/${IMAGE_NAME}:homolog
 
       - name: Limpeza de imagens antigas
