@@ -22,34 +22,68 @@ jobs:
       - name: Configurar chave SSH com passphrase
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          # Usa printf para garantir que a chave seja escrita corretamente
+          printf '%s\n' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          
+          # Verifica se o arquivo foi criado e tem conteúdo
+          if [ ! -f ~/.ssh/id_rsa ] || [ ! -s ~/.ssh/id_rsa ]; then
+            echo "Erro: arquivo id_rsa não foi criado ou está vazio"
+            ls -la ~/.ssh/ || true
+            exit 1
+          fi
+          
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
           
           # Adiciona a chave ao ssh-agent usando expect para fornecer a passphrase
           eval "$(ssh-agent -s)"
-          expect << EOF
+          expect << 'EXPECT_EOF'
             spawn ssh-add ~/.ssh/id_rsa
-            expect "Enter passphrase"
-            send "${{ secrets.VPS_SSH_PASSPHRASE }}\r"
-            expect eof
-          EOF
+            expect {
+              "Enter passphrase" {
+                send "${{ secrets.VPS_SSH_PASSPHRASE }}\r"
+                exp_continue
+              }
+              "Identity added" {
+                exit 0
+              }
+              eof {
+                exit 0
+              }
+            }
+          EXPECT_EOF
 
       - name: Copiar projeto para o servidor
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          
+          # Verifica se o arquivo foi criado
+          if [ ! -f ~/.ssh/id_rsa ]; then
+            echo "Erro: arquivo id_rsa não foi criado"
+            exit 1
+          fi
+          
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
           
           eval "$(ssh-agent -s)"
-          expect << EOF
+          expect << 'EXPECT_EOF'
             spawn ssh-add ~/.ssh/id_rsa
-            expect "Enter passphrase"
-            send "${{ secrets.VPS_SSH_PASSPHRASE }}\r"
-            expect eof
-          EOF
+            expect {
+              "Enter passphrase" {
+                send "${{ secrets.VPS_SSH_PASSPHRASE }}\r"
+                exp_continue
+              }
+              "Identity added" {
+                exit 0
+              }
+              eof {
+                exit 0
+              }
+            }
+          EXPECT_EOF
           
           rsync -avz --delete \
             --exclude 'node_modules' \
@@ -63,15 +97,31 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          
+          # Verifica se o arquivo foi criado
+          if [ ! -f ~/.ssh/id_rsa ]; then
+            echo "Erro: arquivo id_rsa não foi criado"
+            exit 1
+          fi
+          
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
           
           eval "$(ssh-agent -s)"
-          expect << EOF
+          expect << 'EXPECT_EOF'
             spawn ssh-add ~/.ssh/id_rsa
-            expect "Enter passphrase"
-            send "${{ secrets.VPS_SSH_PASSPHRASE }}\r"
-            expect eof
-          EOF
+            expect {
+              "Enter passphrase" {
+                send "${{ secrets.VPS_SSH_PASSPHRASE }}\r"
+                exp_continue
+              }
+              "Identity added" {
+                exit 0
+              }
+              eof {
+                exit 0
+              }
+            }
+          EXPECT_EOF
           
           ssh -o StrictHostKeyChecking=no \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
