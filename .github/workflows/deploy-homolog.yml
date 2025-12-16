@@ -40,7 +40,7 @@ jobs:
 
   deploy:
     name: Pull & Run on Server
-    runs-on: self-hosted
+    runs-on: [self-hosted, Linux, X64]
     needs: build_and_push
 
     env:
