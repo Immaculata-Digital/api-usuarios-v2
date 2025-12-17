@@ -1,180 +1,93 @@
-name: Deploy API Usuários - Main
+name: Build and Deploy - API Usuários Main
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  deploy:
-    name: Deploy via SSH
+  build_and_push:
+    name: Build & Push Image to GHCR
     runs-on: ubuntu-latest
 
+    env:
+      IMAGE_NAME: api-usuarios-v2
+
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - name: Checkout do código
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Instalar expect
+      - name: Login GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build imagem
         run: |
-          sudo apt-get update
-          sudo apt-get install -y expect
+          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker build -t ghcr.io/${REPO_OWNER_LOWER}/${IMAGE_NAME}:main .
 
-      - name: Configurar chave SSH com passphrase
+      - name: Push imagem
         run: |
-          mkdir -p ~/.ssh
-          # Usa printf para garantir que a chave seja escrita corretamente
-          printf '%s\n' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          
-          # Verifica se o arquivo foi criado e tem conteúdo
-          if [ ! -f ~/.ssh/id_rsa ] || [ ! -s ~/.ssh/id_rsa ]; then
-            echo "Erro: arquivo id_rsa não foi criado ou está vazio"
-            ls -la ~/.ssh/ || true
-            exit 1
-          fi
-          
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-          
-          # Adiciona a chave ao ssh-agent usando expect para fornecer a passphrase
-          eval "$(ssh-agent -s)"
-          expect << 'EXPECT_EOF'
-            spawn ssh-add ~/.ssh/id_rsa
-            expect {
-              "Enter passphrase" {
-                send "${{ secrets.VPS_SSH_PASSPHRASE }}\r"
-                exp_continue
-              }
-              "Identity added" {
-                exit 0
-              }
-              eof {
-                exit 0
-              }
-            }
-          EXPECT_EOF
+          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker push ghcr.io/${REPO_OWNER_LOWER}/${IMAGE_NAME}:main
 
-      - name: Copiar projeto para o servidor
+  deploy:
+    name: Pull & Run on Server
+    runs-on: self-hosted
+    needs: build_and_push
+
+    env:
+      IMAGE_NAME: api-usuarios-v2
+
+    steps:
+      - name: Login GHCR (no servidor)
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          
-          # Verifica se o arquivo foi criado
-          if [ ! -f ~/.ssh/id_rsa ]; then
-            echo "Erro: arquivo id_rsa não foi criado"
-            exit 1
-          fi
-          
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
-          
-          eval "$(ssh-agent -s)"
-          expect << 'EXPECT_EOF'
-            spawn ssh-add ~/.ssh/id_rsa
-            expect {
-              "Enter passphrase" {
-                send "${{ secrets.VPS_SSH_PASSPHRASE }}\r"
-                exp_continue
-              }
-              "Identity added" {
-                exit 0
-              }
-              eof {
-                exit 0
-              }
-            }
-          EXPECT_EOF
-          
-          rsync -avz --delete \
-            --exclude 'node_modules' \
-            --exclude '.git' \
-            --exclude 'dist' \
-            -e "ssh -o StrictHostKeyChecking=no" \
-            ./ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_DEPLOY_PATH }}
+          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${REPO_OWNER_LOWER} --password-stdin
 
-      - name: Buildar imagem e reiniciar container
+      - name: Pull da nova imagem
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          
-          # Verifica se o arquivo foi criado
-          if [ ! -f ~/.ssh/id_rsa ]; then
-            echo "Erro: arquivo id_rsa não foi criado"
-            exit 1
-          fi
-          
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
-          
-          eval "$(ssh-agent -s)"
-          expect << 'EXPECT_EOF'
-            spawn ssh-add ~/.ssh/id_rsa
-            expect {
-              "Enter passphrase" {
-                send "${{ secrets.VPS_SSH_PASSPHRASE }}\r"
-                exp_continue
-              }
-              "Identity added" {
-                exit 0
-              }
-              eof {
-                exit 0
-              }
-            }
-          EXPECT_EOF
-          
-          ssh -o StrictHostKeyChecking=no \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "DEPLOY_PATH='${{ secrets.VPS_DEPLOY_PATH }}' \
-            DB_HOST='${{ secrets.DB_HOST }}' \
-            DB_PORT='${{ secrets.DB_PORT }}' \
-            DB_NAME='${{ secrets.DB_NAME }}' \
-            DB_USER='${{ secrets.DB_USER }}' \
-            DB_PASS='${{ secrets.DB_PASS }}' \
-            JWT_SECRET='${{ secrets.JWT_SECRET }}' \
-            JWT_REFRESH_SECRET='${{ secrets.JWT_REFRESH_SECRET }}' \
-            JWT_ISS='${{ secrets.JWT_ISS }}' \
-            JWT_AUD='${{ secrets.JWT_AUD }}' \
-            JWT_ALG='${{ secrets.JWT_ALG }}' \
-            ACCESS_TOKEN_TTL='${{ secrets.ACCESS_TOKEN_TTL }}' \
-            REFRESH_TOKEN_TTL='${{ secrets.REFRESH_TOKEN_TTL }}' \
-            BCRYPT_SALT_ROUNDS='${{ secrets.BCRYPT_SALT_ROUNDS }}' \
-            CORS_ORIGINS='${{ secrets.CORS_ORIGINS }}' \
-            LOG_LEVEL='${{ secrets.LOG_LEVEL }}' \
-            API_COMUNICACOES_URL='${{ secrets.VITE_API_COMUNICACOES_BASE_URL_MAIN }}' \
-            PORT='${{ secrets.PORT }}' \
-            bash -s" << 'EOF'
-            set -e
-            cd "$DEPLOY_PATH"
+          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker pull ghcr.io/${REPO_OWNER_LOWER}/${IMAGE_NAME}:main
 
-            docker build -t api-usuarios \
-              --build-arg PORT="$PORT" \
-              --build-arg DB_HOST="$DB_HOST" \
-              --build-arg DB_PORT="$DB_PORT" \
-              --build-arg DB_NAME="$DB_NAME" \
-              --build-arg DB_USER="$DB_USER" \
-              --build-arg DB_PASS="$DB_PASS" \
-              --build-arg JWT_SECRET="$JWT_SECRET" \
-              --build-arg JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET" \
-              --build-arg JWT_ISS="$JWT_ISS" \
-              --build-arg JWT_AUD="$JWT_AUD" \
-              --build-arg JWT_ALG="$JWT_ALG" \
-              --build-arg ACCESS_TOKEN_TTL="$ACCESS_TOKEN_TTL" \
-              --build-arg REFRESH_TOKEN_TTL="$REFRESH_TOKEN_TTL" \
-              --build-arg BCRYPT_SALT_ROUNDS="$BCRYPT_SALT_ROUNDS" \
-              --build-arg CORS_ORIGINS="$CORS_ORIGINS" \
-              --build-arg LOG_LEVEL="$LOG_LEVEL" \
-              --build-arg API_COMUNICACOES_URL="$API_COMUNICACOES_URL" \
-              .
+      - name: Parar e remover container antigo
+        run: |
+          docker stop ${IMAGE_NAME}-main || true
+          docker rm ${IMAGE_NAME}-main || true
 
-            docker stop api-usuarios || true
-            docker rm api-usuarios || true
-            docker run -d \
-              --name api-usuarios \
-              -p "$PORT":"$PORT" \
-              --restart unless-stopped \
-              api-usuarios
+      - name: Subir container novo
+        run: |
+          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker run -d \
+            --name ${IMAGE_NAME}-main \
+            --restart unless-stopped \
+            -p 3333:3333 \
+            -e DB_HOST='${{ secrets.DB_HOST_MAIN }}' \
+            -e DB_PORT='${{ secrets.DB_PORT_MAIN }}' \
+            -e DB_NAME='${{ secrets.DB_NAME_MAIN }}' \
+            -e DB_USER='${{ secrets.DB_USER_MAIN }}' \
+            -e DB_PASS='${{ secrets.DB_PASS_MAIN }}' \
+            -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+            -e JWT_REFRESH_SECRET='${{ secrets.JWT_REFRESH_SECRET }}' \
+            -e JWT_ISS='${{ secrets.JWT_ISS }}' \
+            -e JWT_AUD='${{ secrets.JWT_AUD }}' \
+            -e JWT_ALG='${{ secrets.JWT_ALG }}' \
+            -e ACCESS_TOKEN_TTL='${{ secrets.ACCESS_TOKEN_TTL }}' \
+            -e REFRESH_TOKEN_TTL='${{ secrets.REFRESH_TOKEN_TTL }}' \
+            -e BCRYPT_SALT_ROUNDS='${{ secrets.BCRYPT_SALT_ROUNDS }}' \
+            -e CORS_ORIGINS='${{ secrets.CORS_ORIGINS }}' \
+            -e LOG_LEVEL='${{ secrets.LOG_LEVEL }}' \
+            -e API_COMUNICACOES_URL='${{ secrets.VITE_API_COMUNICACOES_URL_MAIN }}' \
+            -e PORT='3333' \
+            ghcr.io/${REPO_OWNER_LOWER}/${IMAGE_NAME}:main
 
-            docker image prune -f || true
-          EOF
-
+      - name: Limpeza de imagens antigas
+        run: |
+          docker image prune -f || true
