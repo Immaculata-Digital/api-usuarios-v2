@@ -14,11 +14,66 @@ export class AuthController {
   ) { }
 
   login = async (req: Request, res: Response) => {
+    const startTime = Date.now()
+    let loginValue: string | undefined
+
     try {
+      console.log('[LOGIN] ========================================')
+      console.log('[LOGIN] Iniciando processo de login')
+      console.log('[LOGIN] Dados recebidos:', {
+        body: req.body,
+        loginOrEmail: req.body?.loginOrEmail,
+        passwordPresent: !!req.body?.password,
+        passwordLength: req.body?.password?.length || 0,
+        bodyKeys: Object.keys(req.body || {})
+      })
+
+      loginValue = req.body?.loginOrEmail
+
+      console.log('[LOGIN] Validando schema...')
       const validated = loginSchema.parse(req.body)
+      console.log('[LOGIN] Schema validado com sucesso')
+
+      console.log('[LOGIN] Executando use case...')
       const result = await this.loginUseCase.execute(validated)
+      
+      const duration = Date.now() - startTime
+      console.log('[LOGIN] Login realizado com sucesso em', duration, 'ms')
+      console.log('[LOGIN] ========================================')
+      
       return res.status(200).json(result)
-    } catch (error) {
+    } catch (error: unknown) {
+      const duration = Date.now() - startTime
+      const err = error as any
+      
+      console.error('[LOGIN] ========================================')
+      console.error('[LOGIN] ERRO NO LOGIN')
+      console.error('[LOGIN] ========================================')
+      console.error('[LOGIN] Tempo decorrido:', duration, 'ms')
+      console.error('[LOGIN] Login tentado:', loginValue || 'não informado')
+      console.error('[LOGIN] Tipo do erro:', err?.constructor?.name || typeof error)
+      console.error('[LOGIN] Mensagem do erro:', err?.message || 'sem mensagem')
+      console.error('[LOGIN] Stack trace completo:')
+      console.error(err?.stack || 'sem stack trace')
+      console.error('[LOGIN] Erro completo (JSON):')
+      try {
+        console.error(JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+      } catch (jsonError) {
+        console.error('Não foi possível serializar o erro para JSON')
+      }
+      console.error('[LOGIN] Detalhes adicionais:')
+      console.error({
+        name: err?.name,
+        code: err?.code,
+        errno: err?.errno,
+        sqlState: err?.sqlState,
+        sqlMessage: err?.sqlMessage,
+        original: err?.original,
+        issues: err?.issues,
+        statusCode: err?.statusCode
+      })
+      console.error('[LOGIN] ========================================')
+
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({ status: 'error', message: error.message })
       }
