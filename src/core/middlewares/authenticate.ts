@@ -44,10 +44,23 @@ const PUBLIC_ROUTES = [
 
 /**
  * Verifica se uma rota é pública
+ * Verifica tanto o path relativo quanto o path completo (com /api)
  */
-const isPublicRoute = (path: string): boolean => {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  return PUBLIC_ROUTES.some((publicRoute) => normalizedPath.startsWith(publicRoute))
+const isPublicRoute = (req: Request): boolean => {
+  // Obtém o path completo (incluindo /api se aplicável)
+  const fullPath = req.baseUrl + req.path
+  // Remove query string se houver
+  const pathWithoutQuery = fullPath.split('?')[0]
+  // Normaliza o path
+  const normalizedFullPath = pathWithoutQuery.startsWith('/') ? pathWithoutQuery : `/${pathWithoutQuery}`
+  
+  // Também verifica o path relativo (sem /api)
+  const normalizedPath = req.path.startsWith('/') ? req.path : `/${req.path}`
+  
+  // Verifica se algum dos paths corresponde a uma rota pública
+  return PUBLIC_ROUTES.some((publicRoute) => 
+    normalizedFullPath.startsWith(publicRoute) || normalizedPath.startsWith(publicRoute)
+  )
 }
 
 /**
@@ -57,7 +70,7 @@ const isPublicRoute = (path: string): boolean => {
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   try {
     // Se for uma rota pública, permite o acesso sem autenticação
-    if (isPublicRoute(req.path)) {
+    if (isPublicRoute(req)) {
       return next()
     }
 

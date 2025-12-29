@@ -6,7 +6,7 @@ import { generatePasswordToken } from '../../../core/utils/jwt'
 const CHAVE_COMUNICACAO_RESET_PASSWORD = 'EMAIL-REDEFINICAO-SENHA'
 
 export class PasswordSetupService {
-  async send(user: UserProps) {
+  async send(schema: string, user: UserProps) {
     const token = generatePasswordToken(user.id, user.login)
     const baseUrl = env.app.webUrl.replace(/\/$/, '')
     const path = env.app.passwordResetPath.startsWith('/')
@@ -15,28 +15,23 @@ export class PasswordSetupService {
     const urlReset = `${baseUrl}${path}?token=${token}`
 
     // Preparar variáveis para o template HTML
-    const nomeUsuario = user.fullName
-    const tempoValidade = '2 horas' // Pode ser configurável
-    const anoAtual = new Date().getFullYear().toString()
-    const urlSistema = baseUrl
+    const nomeUsuario = user.fullName || user.login
 
-    // Chamar API de comunicações
+    // Chamar API de comunicações para disparo automático
     try {
-      const response = await fetch(`${env.apiComunicacoes.url}/comunicacoes/enviar`, {
+      const response = await fetch(`${env.apiComunicacoes.url}/${schema}/disparo-automatico`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          chave: CHAVE_COMUNICACAO_RESET_PASSWORD,
-          destinatario: user.email,
-          variaveis: [
-            nomeUsuario,      // VAR1
-            tempoValidade,   // VAR2
-            urlReset,        // VAR3
-            anoAtual,        // VAR4
-            urlSistema,      // VAR5
-          ],
+          tipo_envio: 'reset_senha',
+          cliente: {
+            id_cliente: user.id,
+            nome_completo: nomeUsuario,
+            email: user.email,
+            token_reset: token,
+          },
         }),
       })
 

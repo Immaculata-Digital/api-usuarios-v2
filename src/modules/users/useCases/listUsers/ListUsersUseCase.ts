@@ -10,8 +10,8 @@ export interface ListUsersFilters {
 export class ListUsersUseCase {
   constructor(private readonly usersRepository: IUserRepository) {}
 
-  async execute(filters: ListUsersFilters = {}) {
-    const users = await this.usersRepository.findAll()
+  async execute(schema: string, filters: ListUsersFilters = {}) {
+    const users = await this.usersRepository.findAll(schema)
 
     const { search, groupId, feature } = filters
     const normalizedSearch = search?.toLowerCase()

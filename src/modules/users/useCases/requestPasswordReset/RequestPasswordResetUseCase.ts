@@ -10,8 +10,15 @@ export class RequestPasswordResetUseCase {
   constructor(private readonly userRepository: IUserRepository) {}
 
   async execute(email: string): Promise<void> {
-    // Buscar usuário pelo email
-    const user = await this.userRepository.findByEmail(email.toLowerCase().trim())
+    // Buscar schema pelo email
+    const schema = await this.userRepository.findSchemaByEmail(email.toLowerCase().trim())
+    if (!schema) {
+      // Por segurança, não revelar se o email existe ou não
+      return
+    }
+
+    // Buscar usuário pelo email no schema encontrado
+    const user = await this.userRepository.findByEmail(schema, email.toLowerCase().trim())
 
     // Por segurança, não revelar se o email existe ou não
     // Sempre retorna sucesso, mesmo se o usuário não existir
@@ -36,23 +43,21 @@ export class RequestPasswordResetUseCase {
     const anoAtual = new Date().getFullYear().toString()
     const urlSistema = baseUrl
 
-    // Chamar API de comunicações
+    // Chamar API de comunicações para disparo automático
     try {
-      const response = await fetch(`${env.apiComunicacoes.url}/comunicacoes/enviar`, {
+      const response = await fetch(`${env.apiComunicacoes.url}/${schema}/disparo-automatico`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          chave: CHAVE_COMUNICACAO_RESET_PASSWORD,
-          destinatario: user.email,
-          variaveis: [
-            nomeUsuario,      // VAR1
-            tempoValidade,   // VAR2
-            urlReset,        // VAR3
-            anoAtual,        // VAR4
-            urlSistema,      // VAR5
-          ],
+          tipo_envio: 'reset_senha',
+          cliente: {
+            id_cliente: user.id,
+            nome_completo: user.fullName || user.login,
+            email: user.email,
+            token_reset: token,
+          },
         }),
       })
 

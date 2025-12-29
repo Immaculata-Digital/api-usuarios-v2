@@ -9,13 +9,14 @@ export class UserPermissionsController {
 
     show = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            const schema = req.schema!
             const { id } = req.params
 
             if (!id) {
                 throw new AppError('Parâmetro id é obrigatório', 400)
             }
 
-            const permissions = await this.getUserPermissions.execute(id)
+            const permissions = await this.getUserPermissions.execute(schema, id)
             return res.json(permissions)
         } catch (error) {
             return next(error)
@@ -28,10 +29,16 @@ export class UserPermissionsController {
                 throw new AppError('Usuário não autenticado', 401)
             }
 
-            const userId = req.user.userId
-            const permissions = await this.getUserPermissions.execute(userId)
+            // Para myPermissions, o schema pode vir do header ou tentar buscar pelo usuário
+            const schema = req.schema || req.headers['x-schema'] as string
+            if (!schema) {
+                throw new AppError('Schema é obrigatório', 400)
+            }
 
-            const user = await userRepository.findById(userId)
+            const userId = req.user.userId
+            const permissions = await this.getUserPermissions.execute(schema, userId)
+
+            const user = await userRepository.findById(schema, userId)
             if (!user) {
                 throw new AppError('Usuário não encontrado', 404)
             }

@@ -35,16 +35,16 @@ export class LoginUseCase {
         passwordLength: data.password?.length || 0
       })
 
-      // 1. Buscar usuário por login ou email (com senha)
+      // 1. Buscar usuário por login ou email (com senha) em todos os schemas
       console.log('[LOGIN_USE_CASE] Buscando usuário no repositório...')
-      const userWithPassword = await this.usersRepository.findByLoginOrEmailWithPassword(
-        data.loginOrEmail,
-      )
+      const result = await this.usersRepository.findSchemaByLoginOrEmail(data.loginOrEmail)
 
-      if (!userWithPassword) {
+      if (!result) {
         console.log('[LOGIN_USE_CASE] Usuário não encontrado para:', data.loginOrEmail)
         throw new AppError('Credenciais inválidas', 401)
       }
+
+      const userWithPassword = result.user
 
       console.log('[LOGIN_USE_CASE] Usuário encontrado:', {
         id: userWithPassword.id,

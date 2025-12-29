@@ -33,60 +33,63 @@ const mapRowToProps = (row: UserRow): UserProps => ({
   updatedAt: row.updated_at,
 })
 
-const buildSelectQuery = (extraCondition = '', includePassword = false) => `
-  SELECT
-    u.id,
-    u.full_name,
-    u.login,
-    u.email,
-    ${includePassword ? 'u.password,' : ''}
-    u.allow_features,
-    u.denied_features,
-    u.created_by,
-    u.updated_by,
-    u.created_at,
-    u.updated_at,
-    COALESCE(
-      ARRAY_AGG(m.group_id) FILTER (WHERE m.group_id IS NOT NULL),
-      '{}'
-    ) AS group_ids
-  FROM users u
-  LEFT JOIN access_group_memberships m ON m.user_id = u.id
-  ${extraCondition}
-  GROUP BY u.id, u.full_name, u.login, u.email${includePassword ? ', u.password' : ''}, u.allow_features, u.denied_features, u.created_by, u.updated_by, u.created_at, u.updated_at
-`
+const buildSelectQuery = (schema: string, extraCondition = '', includePassword = false) => {
+  const schemaPrefix = `"${schema}".`
+  return `
+    SELECT
+      u.id,
+      u.full_name,
+      u.login,
+      u.email,
+      ${includePassword ? 'u.password,' : ''}
+      u.allow_features,
+      u.denied_features,
+      u.created_by,
+      u.updated_by,
+      u.created_at,
+      u.updated_at,
+      COALESCE(
+        ARRAY_AGG(m.group_id) FILTER (WHERE m.group_id IS NOT NULL),
+        '{}'
+      ) AS group_ids
+    FROM ${schemaPrefix}users u
+    LEFT JOIN ${schemaPrefix}access_group_memberships m ON m.user_id = u.id
+    ${extraCondition}
+    GROUP BY u.id, u.full_name, u.login, u.email${includePassword ? ', u.password' : ''}, u.allow_features, u.denied_features, u.created_by, u.updated_by, u.created_at, u.updated_at
+  `
+}
 
 export class PostgresUserRepository implements IUserRepository {
-  async findAll(): Promise<UserProps[]> {
-    const result = await pool.query<UserRow>(buildSelectQuery())
+  async findAll(schema: string): Promise<UserProps[]> {
+    const result = await pool.query<UserRow>(buildSelectQuery(schema))
     return result.rows.map(mapRowToProps)
   }
 
-  async findById(id: string): Promise<UserProps | null> {
-    const result = await pool.query<UserRow>(buildSelectQuery('WHERE u.id = $1'), [id])
+  async findById(schema: string, id: string): Promise<UserProps | null> {
+    const result = await pool.query<UserRow>(buildSelectQuery(schema, 'WHERE u.id = $1'), [id])
     const row = result.rows[0]
     return row ? mapRowToProps(row) : null
   }
 
-  async findByLogin(login: string): Promise<UserProps | null> {
-    const result = await pool.query<UserRow>(buildSelectQuery('WHERE LOWER(u.login) = LOWER($1)'), [
+  async findByLogin(schema: string, login: string): Promise<UserProps | null> {
+    const result = await pool.query<UserRow>(buildSelectQuery(schema, 'WHERE LOWER(u.login) = LOWER($1)'), [
       login,
     ])
     const row = result.rows[0]
     return row ? mapRowToProps(row) : null
   }
 
-  async findByEmail(email: string): Promise<UserProps | null> {
-    const result = await pool.query<UserRow>(buildSelectQuery('WHERE LOWER(u.email) = LOWER($1)'), [
+  async findByEmail(schema: string, email: string): Promise<UserProps | null> {
+    const result = await pool.query<UserRow>(buildSelectQuery(schema, 'WHERE LOWER(u.email) = LOWER($1)'), [
       email,
     ])
     const row = result.rows[0]
     return row ? mapRowToProps(row) : null
   }
 
-  async findByLoginOrEmailWithPassword(loginOrEmail: string): Promise<(UserProps & { passwordHash: string | null }) | null> {
+  async findByLoginOrEmailWithPassword(schema: string, loginOrEmail: string): Promise<(UserProps & { passwordHash: string | null }) | null> {
     const result = await pool.query<UserRow>(
-      buildSelectQuery('WHERE LOWER(u.login) = LOWER($1) OR LOWER(u.email) = LOWER($1)', true),
+      buildSelectQuery(schema, 'WHERE LOWER(u.login) = LOWER($1) OR LOWER(u.email) = LOWER($1)', true),
       [loginOrEmail],
     )
     const row = result.rows[0]
@@ -97,15 +100,16 @@ export class PostgresUserRepository implements IUserRepository {
     }
   }
 
-  async create(user: User): Promise<UserProps> {
+  async create(schema: string, user: User): Promise<UserProps> {
     const client = await pool.connect()
     try {
       await client.query('BEGIN')
       const data = user.toJSON()
+      const schemaPrefix = `"${schema}".`
 
       await client.query(
         `
-          INSERT INTO users (
+          INSERT INTO ${schemaPrefix}users (
             id,
             full_name,
             login,
@@ -134,10 +138,10 @@ export class PostgresUserRepository implements IUserRepository {
         ],
       )
 
-      await this.syncMemberships(client, data.id, data.groupIds)
+      await this.syncMemberships(client, schema, data.id, data.groupIds)
       await client.query('COMMIT')
 
-      const inserted = await this.findById(data.id)
+      const inserted = await this.findById(schema, data.id)
       if (!inserted) {
         throw new Error('Falha ao recuperar usuário inserido')
       }
@@ -150,15 +154,16 @@ export class PostgresUserRepository implements IUserRepository {
     }
   }
 
-  async update(user: User): Promise<UserProps> {
+  async update(schema: string, user: User): Promise<UserProps> {
     const client = await pool.connect()
     try {
       await client.query('BEGIN')
       const data = user.toJSON()
+      const schemaPrefix = `"${schema}".`
 
       await client.query(
         `
-          UPDATE users
+          UPDATE ${schemaPrefix}users
           SET
             full_name = $2,
             login = $3,
@@ -181,10 +186,10 @@ export class PostgresUserRepository implements IUserRepository {
         ],
       )
 
-      await this.syncMemberships(client, data.id, data.groupIds)
+      await this.syncMemberships(client, schema, data.id, data.groupIds)
       await client.query('COMMIT')
 
-      const updated = await this.findById(data.id)
+      const updated = await this.findById(schema, data.id)
       if (!updated) {
         throw new Error('Falha ao recuperar usuário atualizado')
       }
@@ -197,12 +202,14 @@ export class PostgresUserRepository implements IUserRepository {
     }
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(schema: string, id: string): Promise<void> {
     const client = await pool.connect()
     try {
       await client.query('BEGIN')
-      await client.query('DELETE FROM access_group_memberships WHERE user_id = $1', [id])
-      await client.query('DELETE FROM users WHERE id = $1', [id])
+      const schemaPrefix = `"${schema}".`
+      // Deletar memberships primeiro (por causa do CASCADE, isso será automático, mas vamos fazer explicitamente)
+      await client.query(`DELETE FROM ${schemaPrefix}access_group_memberships WHERE user_id = $1`, [id])
+      await client.query(`DELETE FROM ${schemaPrefix}users WHERE id = $1`, [id])
       await client.query('COMMIT')
     } catch (error) {
       await client.query('ROLLBACK')
@@ -212,8 +219,9 @@ export class PostgresUserRepository implements IUserRepository {
     }
   }
 
-  private async syncMemberships(client: PoolClient, userId: string, groupIds: string[]) {
-    await client.query('DELETE FROM access_group_memberships WHERE user_id = $1', [userId])
+  private async syncMemberships(client: PoolClient, schema: string, userId: string, groupIds: string[]) {
+    const schemaPrefix = `"${schema}".`
+    await client.query(`DELETE FROM ${schemaPrefix}access_group_memberships WHERE user_id = $1`, [userId])
     if (groupIds.length === 0) {
       return
     }
@@ -227,23 +235,87 @@ export class PostgresUserRepository implements IUserRepository {
 
     await client.query(
       `
-        INSERT INTO access_group_memberships (user_id, group_id)
+        INSERT INTO ${schemaPrefix}access_group_memberships (user_id, group_id)
         VALUES ${values.join(', ')}
       `,
       params,
     )
   }
 
-  async updatePassword(id: string, password: string | null): Promise<void> {
+  async updatePassword(schema: string, id: string, password: string | null): Promise<void> {
+    const schemaPrefix = `"${schema}".`
     await pool.query(
       `
-        UPDATE users
+        UPDATE ${schemaPrefix}users
         SET password = $2,
             updated_at = NOW()
         WHERE id = $1
       `,
       [id, password],
     )
+  }
+
+  async findSchemaByEmail(email: string): Promise<string | null> {
+    const client = await pool.connect()
+    try {
+      // Buscar em todos os schemas (exceto system schemas)
+      const schemasResult = await client.query<{ schema_name: string }>(
+        `SELECT schema_name 
+         FROM information_schema.schemata 
+         WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'public')
+         ORDER BY schema_name`
+      )
+
+      for (const row of schemasResult.rows) {
+        const schema = row.schema_name
+        const userResult = await client.query<{ id: string }>(
+          `SELECT id FROM "${schema}".users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+          [email]
+        )
+        if (userResult.rows.length > 0) {
+          return schema
+        }
+      }
+
+      return null
+    } finally {
+      client.release()
+    }
+  }
+
+  async findSchemaByLoginOrEmail(loginOrEmail: string): Promise<{ schema: string; user: UserProps & { passwordHash: string | null } } | null> {
+    const client = await pool.connect()
+    try {
+      // Buscar em todos os schemas (exceto system schemas)
+      const schemasResult = await client.query<{ schema_name: string }>(
+        `SELECT schema_name 
+         FROM information_schema.schemata 
+         WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'public')
+         ORDER BY schema_name`
+      )
+
+      for (const row of schemasResult.rows) {
+        const schema = row.schema_name
+        const result = await client.query<UserRow>(
+          buildSelectQuery(schema, 'WHERE LOWER(u.login) = LOWER($1) OR LOWER(u.email) = LOWER($1)', true),
+          [loginOrEmail],
+        )
+        const userRow = result.rows[0]
+        if (userRow) {
+          return {
+            schema,
+            user: {
+              ...mapRowToProps(userRow),
+              passwordHash: userRow.password,
+            },
+          }
+        }
+      }
+
+      return null
+    } finally {
+      client.release()
+    }
   }
 }
 

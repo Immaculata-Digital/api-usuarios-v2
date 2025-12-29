@@ -10,22 +10,22 @@ export class UpdateUserUseCase {
     private readonly accessGroupsRepository: IAccessGroupRepository,
   ) { }
 
-  async execute(id: string, payload: UpdateUserDTO) {
-    const existing = await this.usersRepository.findById(id)
+  async execute(schema: string, id: string, payload: UpdateUserDTO) {
+    const existing = await this.usersRepository.findById(schema, id)
 
     if (!existing) {
       throw new AppError('Usuário não encontrado', 404)
     }
 
     if (payload.login && payload.login !== existing.login) {
-      const loginTaken = await this.usersRepository.findByLogin(payload.login)
+      const loginTaken = await this.usersRepository.findByLogin(schema, payload.login)
       if (loginTaken) {
         throw new AppError('Login já está em uso', 409)
       }
     }
 
     if (payload.email && payload.email !== existing.email) {
-      const emailTaken = await this.usersRepository.findByEmail(payload.email)
+      const emailTaken = await this.usersRepository.findByEmail(schema, payload.email)
       if (emailTaken) {
         throw new AppError('E-mail já está em uso', 409)
       }
@@ -41,7 +41,7 @@ export class UpdateUserUseCase {
     const user = User.restore(existing)
     user.update(payload)
 
-    return this.usersRepository.update(user)
+    return this.usersRepository.update(schema, user)
   }
 }
 

@@ -13,10 +13,10 @@ export class CreateUserUseCase {
     private readonly passwordSetup: PasswordSetupService,
   ) { }
 
-  async execute(payload: CreateUserDTO) {
+  async execute(schema: string, payload: CreateUserDTO) {
     const [loginExists, emailExists, validGroups] = await Promise.all([
-      this.usersRepository.findByLogin(payload.login),
-      this.usersRepository.findByEmail(payload.email),
+      this.usersRepository.findByLogin(schema, payload.login),
+      this.usersRepository.findByEmail(schema, payload.email),
       this.accessGroupsRepository.findManyByIds(payload.groupIds),
     ])
 
@@ -40,15 +40,15 @@ export class CreateUserUseCase {
       updatedBy: payload.createdBy,
     })
 
-    const createdUser = await this.usersRepository.create(user)
+    const createdUser = await this.usersRepository.create(schema, user)
 
     // Se a senha foi fornecida, definir diretamente sem enviar email
     if (payload.password) {
       const hashedPassword = await hashPassword(payload.password)
-      await this.usersRepository.updatePassword(createdUser.id, hashedPassword)
+      await this.usersRepository.updatePassword(schema, createdUser.id, hashedPassword)
     } else {
       // Se não foi fornecida, enviar email de setup de senha
-      await this.passwordSetup.send(createdUser)
+      await this.passwordSetup.send(schema, createdUser)
     }
 
     return createdUser

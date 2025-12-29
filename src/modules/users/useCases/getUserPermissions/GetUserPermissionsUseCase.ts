@@ -8,8 +8,8 @@ export class GetUserPermissionsUseCase {
         private readonly accessGroupsRepository: IAccessGroupRepository,
     ) { }
 
-    async execute(userId: string): Promise<string[]> {
-        const user = await this.usersRepository.findById(userId)
+    async execute(schema: string, userId: string): Promise<string[]> {
+        const user = await this.usersRepository.findById(schema, userId)
 
         if (!user) {
             throw new AppError('Usuário não encontrado', 404)

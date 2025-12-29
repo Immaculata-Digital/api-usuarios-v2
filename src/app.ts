@@ -7,6 +7,7 @@ import { notFound } from './core/middlewares/notFound'
 import { requestLogger } from './core/middlewares/requestLogger'
 import { authenticate } from './core/middlewares/authenticate'
 import { routeAuthorization } from './core/middlewares/routeAuthorization'
+import { schemaExtractor } from './core/middlewares/schemaExtractor'
 import { swaggerSpec } from './docs/swagger'
 import { routes } from './routes/index'
 
@@ -19,9 +20,10 @@ app.use(requestLogger)
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
-// Aplicar middlewares de autenticação e autorização antes das rotas
+// Aplicar middlewares de autenticação, autorização e schema antes das rotas
 app.use('/api', authenticate)
 app.use('/api', routeAuthorization)
+app.use('/api', schemaExtractor)
 app.use('/api', routes)
 
 app.use(notFound)

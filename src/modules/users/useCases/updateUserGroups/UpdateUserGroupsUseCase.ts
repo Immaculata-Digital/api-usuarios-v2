@@ -10,8 +10,8 @@ export class UpdateUserGroupsUseCase {
     private readonly accessGroupsRepository: IAccessGroupRepository,
   ) {}
 
-  async execute(id: string, payload: UpdateUserGroupsDTO) {
-    const existing = await this.usersRepository.findById(id)
+  async execute(schema: string, id: string, payload: UpdateUserGroupsDTO) {
+    const existing = await this.usersRepository.findById(schema, id)
 
     if (!existing) {
       throw new AppError('Usuário não encontrado', 404)
@@ -28,7 +28,7 @@ export class UpdateUserGroupsUseCase {
       updatedBy: payload.updatedBy,
     })
 
-    return this.usersRepository.update(user)
+    return this.usersRepository.update(schema, user)
   }
 }
 

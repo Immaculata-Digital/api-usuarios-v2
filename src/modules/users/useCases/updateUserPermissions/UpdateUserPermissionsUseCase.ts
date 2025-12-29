@@ -6,8 +6,8 @@ import type { IUserRepository } from '../../repositories/IUserRepository'
 export class UpdateUserPermissionsUseCase {
   constructor(private readonly usersRepository: IUserRepository) {}
 
-  async execute(id: string, payload: UpdateUserPermissionsDTO) {
-    const existing = await this.usersRepository.findById(id)
+  async execute(schema: string, id: string, payload: UpdateUserPermissionsDTO) {
+    const existing = await this.usersRepository.findById(schema, id)
 
     if (!existing) {
       throw new AppError('Usuário não encontrado', 404)
@@ -20,7 +20,7 @@ export class UpdateUserPermissionsUseCase {
       updatedBy: payload.updatedBy,
     })
 
-    return this.usersRepository.update(user)
+    return this.usersRepository.update(schema, user)
   }
 }
 

@@ -35,6 +35,7 @@ export class UserController {
 
   index = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const schema = req.schema!
       const { search, groupId, accessGroup, feature } = req.query
       const selectedGroup =
         typeof groupId === 'string'
@@ -42,7 +43,7 @@ export class UserController {
           : typeof accessGroup === 'string'
             ? accessGroup
             : undefined
-      const users = await this.listUsers.execute({
+      const users = await this.listUsers.execute(schema, {
         search: typeof search === 'string' ? search : undefined,
         groupId: selectedGroup,
         feature: typeof feature === 'string' ? feature : undefined,
@@ -55,6 +56,7 @@ export class UserController {
 
   searchByText = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const schema = req.schema!
       const { q, page = '1', limit = '10' } = req.query
       const searchText = typeof q === 'string' ? q : undefined
       const pageNum = parseInt(page as string, 10) || 1
@@ -64,7 +66,7 @@ export class UserController {
         return res.json({ users: [], total: 0, page: pageNum, limit: limitNum })
       }
 
-      const users = await this.listUsers.execute({
+      const users = await this.listUsers.execute(schema, {
         search: searchText,
       })
 
@@ -84,6 +86,12 @@ export class UserController {
 
   createPublicClient = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Schema deve vir do header ou body para rotas públicas
+      const schema = (req.headers['x-schema'] as string) || req.body.schema
+      if (!schema) {
+        throw new AppError('Schema é obrigatório', 400)
+      }
+
       const { login, senha, email } = req.body
 
       if (!login || !senha || !email) {
@@ -105,8 +113,8 @@ export class UserController {
 
       // Verificar se já existe usuário com esse login ou email
       const [loginExists, emailExists] = await Promise.all([
-        userRepository.findByLogin(login.trim()),
-        userRepository.findByEmail(email.trim().toLowerCase()),
+        userRepository.findByLogin(schema, login.trim()),
+        userRepository.findByEmail(schema, email.trim().toLowerCase()),
       ])
 
       if (loginExists) {
@@ -118,7 +126,7 @@ export class UserController {
       }
 
       // Criar usuário cliente com senha (para não enviar email de setup)
-      const user = await this.createUser.execute({
+      const user = await this.createUser.execute(schema, {
         fullName: login.trim(),
         login: login.trim(),
         email: email.trim().toLowerCase(),
@@ -140,13 +148,14 @@ export class UserController {
 
   show = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const schema = req.schema!
       const { id } = req.params
 
       if (!id) {
         throw new AppError('Parâmetro id é obrigatório', 400)
       }
 
-      const user = await this.getUser.execute(id)
+      const user = await this.getUser.execute(schema, id)
       return res.json(user)
     } catch (error) {
       return next(error)
@@ -155,12 +164,13 @@ export class UserController {
 
   store = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const schema = req.schema!
       const parseResult = createUserSchema.safeParse(req.body)
       if (!parseResult.success) {
         throw new AppError('Falha de validação', 422, parseResult.error.flatten())
       }
 
-      const user = await this.createUser.execute(parseResult.data)
+      const user = await this.createUser.execute(schema, parseResult.data)
       return res.status(201).json(user)
     } catch (error) {
       return next(error)
@@ -169,6 +179,7 @@ export class UserController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const schema = req.schema!
       const { id } = req.params
 
       if (!id) {
@@ -180,7 +191,7 @@ export class UserController {
         throw new AppError('Falha de validação', 422, parseResult.error.flatten())
       }
 
-      const user = await this.updateUser.execute(id, parseResult.data)
+      const user = await this.updateUser.execute(schema, id, parseResult.data)
       return res.json(user)
     } catch (error) {
       return next(error)
@@ -189,6 +200,7 @@ export class UserController {
 
   updateBasic = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const schema = req.schema!
       const { id } = req.params
 
       if (!id) {
@@ -200,7 +212,7 @@ export class UserController {
         throw new AppError('Falha de validação', 422, parseResult.error.flatten())
       }
 
-      const user = await this.updateUserBasic.execute(id, parseResult.data)
+      const user = await this.updateUserBasic.execute(schema, id, parseResult.data)
       return res.json(user)
     } catch (error) {
       return next(error)
@@ -209,6 +221,7 @@ export class UserController {
 
   updateGroups = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const schema = req.schema!
       const { id } = req.params
 
       if (!id) {
@@ -220,7 +233,7 @@ export class UserController {
         throw new AppError('Falha de validação', 422, parseResult.error.flatten())
       }
 
-      const user = await this.updateUserGroups.execute(id, parseResult.data)
+      const user = await this.updateUserGroups.execute(schema, id, parseResult.data)
       return res.json(user)
     } catch (error) {
       return next(error)
@@ -229,6 +242,7 @@ export class UserController {
 
   updatePermissions = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const schema = req.schema!
       const { id } = req.params
 
       if (!id) {
@@ -240,7 +254,7 @@ export class UserController {
         throw new AppError('Falha de validação', 422, parseResult.error.flatten())
       }
 
-      const user = await this.updateUserPermissions.execute(id, parseResult.data)
+      const user = await this.updateUserPermissions.execute(schema, id, parseResult.data)
       return res.json(user)
     } catch (error) {
       return next(error)
@@ -249,13 +263,14 @@ export class UserController {
 
   destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const schema = req.schema!
       const { id } = req.params
 
       if (!id) {
         throw new AppError('Parâmetro id é obrigatório', 400)
       }
 
-      await this.deleteUser.execute(id)
+      await this.deleteUser.execute(schema, id)
       return res.status(204).send()
     } catch (error) {
       return next(error)
