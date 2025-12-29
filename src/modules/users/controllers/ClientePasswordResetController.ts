@@ -31,8 +31,15 @@ export class ClientePasswordResetController {
 
       const emailNormalizado = email.toLowerCase().trim()
 
+      // Buscar schema pelo email
+      const schema = await userRepository.findSchemaByEmail(emailNormalizado)
+      if (!schema) {
+        // Por segurança, não revelar se o email existe ou não
+        return res.status(204).send()
+      }
+
       // Buscar usuário pelo email
-      const user = await userRepository.findByEmail(emailNormalizado)
+      const user = await userRepository.findByEmail(schema, emailNormalizado)
 
       // Por segurança, não revelar se o email existe ou não
       // Sempre retorna sucesso, mesmo se o usuário não existir
@@ -57,9 +64,6 @@ export class ClientePasswordResetController {
       const urlSistema = baseUrl
 
       // Chamar API de comunicações para disparo automático
-      // Extrair schema do request (se disponível) ou usar um padrão
-      const schema = (req as any).schema || 'public'
-      
       try {
         const response = await fetch(`${env.apiComunicacoes.url}/${schema}/disparo-automatico`, {
           method: 'POST',
@@ -172,8 +176,17 @@ export class ClientePasswordResetController {
         })
       }
 
+      // Buscar schema pelo email (já normalizado)
+      const schema = await userRepository.findSchemaByEmail(emailNormalizado)
+      if (!schema) {
+        return res.status(403).json({
+          error: 'FORBIDDEN',
+          message: 'Usuário não encontrado para este token',
+        })
+      }
+
       // Buscar usuário
-      const user = await userRepository.findById(tokenPayload.sub)
+      const user = await userRepository.findById(schema, tokenPayload.sub)
 
       if (!user || user.email.toLowerCase() !== emailNormalizado) {
         return res.status(403).json({
@@ -185,7 +198,7 @@ export class ClientePasswordResetController {
       // Nota: A validação de data de nascimento seria feita contra uma tabela de clientes
       // Por enquanto, apenas atualizamos a senha
       const hashedPassword = await hashPassword(nova_senha)
-      await userRepository.updatePassword(user.id, hashedPassword)
+      await userRepository.updatePassword(schema, user.id, hashedPassword)
 
       console.log(`Password reset completed for client ${user.id} from IP ${clientIP}`)
       return res.status(204).send()

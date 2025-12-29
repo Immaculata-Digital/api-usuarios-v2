@@ -103,7 +103,8 @@ export class AuthController {
   refreshToken = async (req: Request, res: Response) => {
     try {
       const validated = refreshTokenSchema.parse(req.body)
-      const result = await this.refreshTokenUseCase.execute(validated.refreshToken)
+      const schema = req.schema
+      const result = await this.refreshTokenUseCase.execute(validated.refreshToken, schema)
       return res.status(200).json(result)
     } catch (error) {
       if (error instanceof AppError) {

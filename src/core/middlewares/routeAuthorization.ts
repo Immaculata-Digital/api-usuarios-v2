@@ -41,7 +41,7 @@ const isPublicRoute = (req: Request): boolean => {
   // Obtém o path completo (incluindo /api se aplicável)
   const fullPath = req.baseUrl + req.path
   // Remove query string se houver
-  const pathWithoutQuery = fullPath.split('?')[0]
+  const pathWithoutQuery = fullPath.split('?')[0] || ''
   // Normaliza o path
   const normalizedFullPath = pathWithoutQuery.startsWith('/') ? pathWithoutQuery : `/${pathWithoutQuery}`
   
