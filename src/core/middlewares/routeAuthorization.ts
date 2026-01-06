@@ -25,6 +25,8 @@ const PUBLIC_ROUTES = [
   '/api/users/clientes/publico',
   '/groups/public/admin',
   '/api/groups/public/admin',
+  '/groups/public/grupo/',
+  '/api/groups/public/grupo/',
   '/clientes/auth/password/forgot',
   '/api/clientes/auth/password/forgot',
   '/clientes/auth/password/reset',
