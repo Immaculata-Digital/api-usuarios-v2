@@ -3,8 +3,9 @@ import { accessGroupController } from '../controllers/AccessGroupController'
 
 export const accessGroupRoutes = Router()
 
-// Rota pública para buscar grupos admin
+// Rotas públicas
 accessGroupRoutes.get('/public/admin', accessGroupController.findAdminGroupsPublic)
+accessGroupRoutes.get('/public/grupo/:code', accessGroupController.findGroupByCodePublic)
 
 // Rotas protegidas
 accessGroupRoutes

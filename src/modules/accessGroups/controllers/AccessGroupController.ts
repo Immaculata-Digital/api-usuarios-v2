@@ -10,6 +10,8 @@ import {
   createAccessGroupSchema,
   updateAccessGroupSchema,
 } from '../validators/accessGroup.schema'
+import { userRepository } from '../../users/repositories'
+import { ListUsersUseCase } from '../../users/useCases/listUsers/ListUsersUseCase'
 
 export class AccessGroupController {
   constructor(
@@ -72,6 +74,57 @@ export class AccessGroupController {
       )
 
       return res.json(adminGroups)
+    } catch (error) {
+      return next(error)
+    }
+  }
+
+  /**
+   * Endpoint público para buscar grupo por código com usuários
+   * Usado pelo serviço de comunicações para enviar emails para grupos
+   */
+  findGroupByCodePublic = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const schema = req.schema!
+      const { code } = req.params
+
+      if (!code) {
+        throw new AppError('Código do grupo é obrigatório', 400)
+      }
+
+      // Buscar grupo por código
+      const group = await accessGroupRepository.findByCode(code.toUpperCase())
+      if (!group) {
+        return res.json({ data: [] })
+      }
+
+      // Buscar usuários do grupo
+      const listUsersUseCase = new ListUsersUseCase(userRepository)
+      const users = await listUsersUseCase.execute(schema, { groupId: group.id })
+
+      // Formatar resposta no formato esperado pelo serviço de comunicações
+      const response = {
+        data: [
+          {
+            id: group.id,
+            name: group.name,
+            code: group.code,
+            usuarios: users.map((user) => ({
+              id: user.id,
+              id_usuario: user.id,
+              email: user.email,
+              emailUsuario: user.email,
+              login: user.login,
+              loginUsuario: user.login,
+              fullName: user.fullName,
+              idGrupoUsuario: group.id,
+              id_grupo_usuario: group.id,
+            })),
+          },
+        ],
+      }
+
+      return res.json(response)
     } catch (error) {
       return next(error)
     }

@@ -24,7 +24,26 @@ export const schemaExtractor = (req: Request, res: Response, next: NextFunction)
 
   // Para rotas de usuários, schema é obrigatório (exceto rotas públicas de reset de senha)
   const isPublicUserRoute = pathToCheck.includes('/password/reset') || pathToCheck.includes('/password/reset-request') || pathToCheck.includes('/clientes/publico')
+  const isPublicGroupRoute = pathToCheck.includes('/groups/public/grupo/')
   const isUserRoute = pathToCheck.includes('/users') || pathToCheck.includes('/password/reset-request') || pathToCheck.includes('/password/reset')
+  const isGroupRoute = pathToCheck.includes('/groups')
+  
+  // Para rotas de grupos que precisam de schema (exceto rotas públicas específicas)
+  if (isGroupRoute && !isPublicGroupRoute && !pathToCheck.includes('/public/admin')) {
+    if (!schema) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Header X-Schema é obrigatório para rotas de grupos',
+      })
+    }
+
+    if (!VALID_SCHEMA.test(schema)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Schema inválido. Use apenas letras, números e underscore, iniciando com letra ou underscore',
+      })
+    }
+  }
   
   if (!isPublicUserRoute && isUserRoute) {
     if (!schema) {
