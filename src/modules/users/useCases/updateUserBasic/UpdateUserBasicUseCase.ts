@@ -35,7 +35,11 @@ export class UpdateUserBasicUseCase {
       updatedBy: payload.updatedBy,
     })
 
-    return this.usersRepository.update(schema, user, payload.lojasGestoras)
+    // Só passa lojasGestoras se estiver definido (não undefined)
+    if (payload.lojasGestoras !== undefined) {
+      return this.usersRepository.update(schema, user, payload.lojasGestoras)
+    }
+    return this.usersRepository.update(schema, user)
   }
 }
 

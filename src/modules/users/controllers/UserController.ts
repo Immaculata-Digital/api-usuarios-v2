@@ -11,6 +11,7 @@ import { UpdateUserUseCase } from '../useCases/updateUser/UpdateUserUseCase'
 import { UpdateUserBasicUseCase } from '../useCases/updateUserBasic/UpdateUserBasicUseCase'
 import { UpdateUserGroupsUseCase } from '../useCases/updateUserGroups/UpdateUserGroupsUseCase'
 import { UpdateUserPermissionsUseCase } from '../useCases/updateUserPermissions/UpdateUserPermissionsUseCase'
+import type { UpdateUserBasicDTO } from '../dto/UpdateUserBasicDTO'
 import {
   createUserSchema,
   updateUserSchema,
@@ -212,7 +213,14 @@ export class UserController {
         throw new AppError('Falha de validação', 422, parseResult.error.flatten())
       }
 
-      const user = await this.updateUserBasic.execute(schema, id, parseResult.data)
+      // Remover propriedades undefined para compatibilidade com exactOptionalPropertyTypes
+      const { lojasGestoras, ...restData } = parseResult.data
+      const data: UpdateUserBasicDTO = {
+        ...restData,
+        ...(lojasGestoras !== undefined && lojasGestoras !== null ? { lojasGestoras } : {}),
+      }
+
+      const user = await this.updateUserBasic.execute(schema, id, data)
       return res.json(user)
     } catch (error) {
       return next(error)

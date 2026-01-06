@@ -32,8 +32,9 @@ export class CreateUserUseCase {
       throw new AppError('Um ou mais grupos não foram encontrados', 404)
     }
 
+    const { lojasGestoras, ...userData } = payload
     const user = User.create({
-      ...payload,
+      ...userData,
       groupIds: payload.groupIds,
       allowFeatures: payload.allowFeatures ?? [],
       deniedFeatures: payload.deniedFeatures ?? [],

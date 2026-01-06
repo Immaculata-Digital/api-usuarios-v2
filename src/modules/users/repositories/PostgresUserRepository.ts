@@ -20,20 +20,28 @@ type UserRow = {
   lojas_gestoras: number[] | null
 }
 
-const mapRowToProps = (row: UserRow): UserProps => ({
-  id: row.id,
-  fullName: row.full_name,
-  login: row.login,
-  email: row.email,
-  groupIds: row.group_ids ?? [],
-  allowFeatures: row.allow_features ?? [],
-  deniedFeatures: row.denied_features ?? [],
-  lojasGestoras: row.lojas_gestoras && row.lojas_gestoras.length > 0 ? row.lojas_gestoras : undefined,
-  createdBy: row.created_by,
-  updatedBy: row.updated_by,
-  createdAt: row.created_at,
-  updatedAt: row.updated_at,
-})
+const mapRowToProps = (row: UserRow): UserProps => {
+  const props: UserProps = {
+    id: row.id,
+    fullName: row.full_name,
+    login: row.login,
+    email: row.email,
+    groupIds: row.group_ids ?? [],
+    allowFeatures: row.allow_features ?? [],
+    deniedFeatures: row.denied_features ?? [],
+    createdBy: row.created_by,
+    updatedBy: row.updated_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+  
+  // Só adiciona lojasGestoras se houver valores
+  if (row.lojas_gestoras && row.lojas_gestoras.length > 0) {
+    props.lojasGestoras = row.lojas_gestoras
+  }
+  
+  return props
+}
 
 const buildSelectQuery = (schema: string, extraCondition = '', includePassword = false) => {
   const schemaPrefix = `"${schema}".`
