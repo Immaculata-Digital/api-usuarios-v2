@@ -17,6 +17,7 @@ type UserRow = {
   created_at: Date
   updated_at: Date
   group_ids: string[] | null
+  lojas_gestoras: number[] | null
 }
 
 const mapRowToProps = (row: UserRow): UserProps => ({
@@ -27,6 +28,7 @@ const mapRowToProps = (row: UserRow): UserProps => ({
   groupIds: row.group_ids ?? [],
   allowFeatures: row.allow_features ?? [],
   deniedFeatures: row.denied_features ?? [],
+  lojasGestoras: row.lojas_gestoras && row.lojas_gestoras.length > 0 ? row.lojas_gestoras : undefined,
   createdBy: row.created_by,
   updatedBy: row.updated_by,
   createdAt: row.created_at,
@@ -49,11 +51,16 @@ const buildSelectQuery = (schema: string, extraCondition = '', includePassword =
       u.created_at,
       u.updated_at,
       COALESCE(
-        ARRAY_AGG(m.group_id) FILTER (WHERE m.group_id IS NOT NULL),
+        ARRAY_AGG(DISTINCT m.group_id) FILTER (WHERE m.group_id IS NOT NULL),
         '{}'
-      ) AS group_ids
+      ) AS group_ids,
+      COALESCE(
+        ARRAY_AGG(DISTINCT lg.id_loja) FILTER (WHERE lg.id_loja IS NOT NULL),
+        '{}'
+      ) AS lojas_gestoras
     FROM ${schemaPrefix}users u
     LEFT JOIN ${schemaPrefix}access_group_memberships m ON m.user_id = u.id
+    LEFT JOIN ${schemaPrefix}user_lojas_gestoras lg ON lg.user_id = u.id
     ${extraCondition}
     GROUP BY u.id, u.full_name, u.login, u.email${includePassword ? ', u.password' : ''}, u.allow_features, u.denied_features, u.created_by, u.updated_by, u.created_at, u.updated_at
   `
@@ -100,7 +107,7 @@ export class PostgresUserRepository implements IUserRepository {
     }
   }
 
-  async create(schema: string, user: User): Promise<UserProps> {
+  async create(schema: string, user: User, lojasGestoras?: number[]): Promise<UserProps> {
     const client = await pool.connect()
     try {
       await client.query('BEGIN')
@@ -139,6 +146,7 @@ export class PostgresUserRepository implements IUserRepository {
       )
 
       await this.syncMemberships(client, schema, data.id, data.groupIds)
+      await this.syncLojasGestoras(client, schema, data.id, lojasGestoras)
       await client.query('COMMIT')
 
       const inserted = await this.findById(schema, data.id)
@@ -154,7 +162,7 @@ export class PostgresUserRepository implements IUserRepository {
     }
   }
 
-  async update(schema: string, user: User): Promise<UserProps> {
+  async update(schema: string, user: User, lojasGestoras?: number[]): Promise<UserProps> {
     const client = await pool.connect()
     try {
       await client.query('BEGIN')
@@ -187,6 +195,7 @@ export class PostgresUserRepository implements IUserRepository {
       )
 
       await this.syncMemberships(client, schema, data.id, data.groupIds)
+      await this.syncLojasGestoras(client, schema, data.id, lojasGestoras)
       await client.query('COMMIT')
 
       const updated = await this.findById(schema, data.id)
@@ -207,8 +216,9 @@ export class PostgresUserRepository implements IUserRepository {
     try {
       await client.query('BEGIN')
       const schemaPrefix = `"${schema}".`
-      // Deletar memberships primeiro (por causa do CASCADE, isso será automático, mas vamos fazer explicitamente)
+      // Deletar memberships e lojas gestoras primeiro (por causa do CASCADE, isso será automático, mas vamos fazer explicitamente)
       await client.query(`DELETE FROM ${schemaPrefix}access_group_memberships WHERE user_id = $1`, [id])
+      await client.query(`DELETE FROM ${schemaPrefix}user_lojas_gestoras WHERE user_id = $1`, [id])
       await client.query(`DELETE FROM ${schemaPrefix}users WHERE id = $1`, [id])
       await client.query('COMMIT')
     } catch (error) {
@@ -236,6 +246,29 @@ export class PostgresUserRepository implements IUserRepository {
     await client.query(
       `
         INSERT INTO ${schemaPrefix}access_group_memberships (user_id, group_id)
+        VALUES ${values.join(', ')}
+      `,
+      params,
+    )
+  }
+
+  private async syncLojasGestoras(client: PoolClient, schema: string, userId: string, lojasGestoras?: number[]) {
+    const schemaPrefix = `"${schema}".`
+    await client.query(`DELETE FROM ${schemaPrefix}user_lojas_gestoras WHERE user_id = $1`, [userId])
+    if (!lojasGestoras || lojasGestoras.length === 0) {
+      return
+    }
+
+    const values: string[] = []
+    const params: unknown[] = [userId]
+    lojasGestoras.forEach((idLoja, index) => {
+      values.push(`($1, $${index + 2})`)
+      params.push(idLoja)
+    })
+
+    await client.query(
+      `
+        INSERT INTO ${schemaPrefix}user_lojas_gestoras (user_id, id_loja)
         VALUES ${values.join(', ')}
       `,
       params,

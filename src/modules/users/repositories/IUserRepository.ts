@@ -8,8 +8,8 @@ export interface IUserRepository {
   findByLoginOrEmailWithPassword(schema: string, loginOrEmail: string): Promise<(UserProps & { passwordHash: string | null }) | null>
   findSchemaByEmail(email: string): Promise<string | null>
   findSchemaByLoginOrEmail(loginOrEmail: string): Promise<{ schema: string; user: UserProps & { passwordHash: string | null } } | null>
-  create(schema: string, user: User): Promise<UserProps>
-  update(schema: string, user: User): Promise<UserProps>
+  create(schema: string, user: User, lojasGestoras?: number[]): Promise<UserProps>
+  update(schema: string, user: User, lojasGestoras?: number[]): Promise<UserProps>
   delete(schema: string, id: string): Promise<void>
   updatePassword(schema: string, id: string, password: string | null): Promise<void>
 }

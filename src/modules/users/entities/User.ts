@@ -8,6 +8,7 @@ export interface UserProps {
   groupIds: string[]
   allowFeatures: string[]
   deniedFeatures: string[]
+  lojasGestoras?: number[]
   createdAt: Date
   createdBy: string
   updatedAt: Date

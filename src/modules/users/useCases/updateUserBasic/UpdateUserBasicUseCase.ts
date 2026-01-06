@@ -35,7 +35,7 @@ export class UpdateUserBasicUseCase {
       updatedBy: payload.updatedBy,
     })
 
-    return this.usersRepository.update(schema, user)
+    return this.usersRepository.update(schema, user, payload.lojasGestoras)
   }
 }
 

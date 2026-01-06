@@ -40,7 +40,7 @@ export class CreateUserUseCase {
       updatedBy: payload.createdBy,
     })
 
-    const createdUser = await this.usersRepository.create(schema, user)
+    const createdUser = await this.usersRepository.create(schema, user, payload.lojasGestoras)
 
     // Se a senha foi fornecida, definir diretamente sem enviar email
     if (payload.password) {

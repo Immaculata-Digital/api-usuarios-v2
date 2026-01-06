@@ -41,7 +41,7 @@ export class UpdateUserUseCase {
     const user = User.restore(existing)
     user.update(payload)
 
-    return this.usersRepository.update(schema, user)
+    return this.usersRepository.update(schema, user, payload.lojasGestoras)
   }
 }
 

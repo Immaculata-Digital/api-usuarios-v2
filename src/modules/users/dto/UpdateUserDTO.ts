@@ -5,6 +5,7 @@ export interface UpdateUserDTO {
   groupIds?: string[] | undefined
   allowFeatures?: string[] | undefined
   deniedFeatures?: string[] | undefined
+  lojasGestoras?: number[] | undefined
   updatedBy: string
 }
 

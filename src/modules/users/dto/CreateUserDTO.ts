@@ -6,6 +6,7 @@ export interface CreateUserDTO {
   password?: string | undefined
   allowFeatures?: string[] | undefined
   deniedFeatures?: string[] | undefined
+  lojasGestoras?: number[] | undefined
   createdBy: string
 }
 

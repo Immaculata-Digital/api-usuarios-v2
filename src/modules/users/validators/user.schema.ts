@@ -25,6 +25,7 @@ export const createUserSchema = z.object({
   password: z.string().min(8).optional(),
   allowFeatures: featureSchema,
   deniedFeatures: featureSchema,
+  lojasGestoras: z.array(z.number().int().positive()).optional(),
   createdBy: z.string().min(3),
 })
 
@@ -36,6 +37,7 @@ export const updateUserSchema = z
     groupIds: z.array(z.string().uuid()).optional(),
     allowFeatures: featureSchema,
     deniedFeatures: featureSchema,
+    lojasGestoras: z.array(z.number().int().positive()).optional(),
     updatedBy: z.string().min(3),
   })
   .refine((data) => Object.keys(data).some((key) => key !== 'updatedBy'), {
@@ -47,6 +49,7 @@ export const updateUserBasicSchema = z.object({
   fullName: z.string().min(3),
   login: z.string().min(3),
   email: z.string().email(),
+  lojasGestoras: z.array(z.number().int().positive()).optional(),
   updatedBy: z.string().min(3),
 })
 
