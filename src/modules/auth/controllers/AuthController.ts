@@ -30,12 +30,24 @@ export class AuthController {
 
       loginValue = req.body?.loginOrEmail
 
-      console.log('[LOGIN] Validando schema...')
-      const validated = loginSchema.parse(req.body)
-      console.log('[LOGIN] Schema validado com sucesso')
+      // Obter schema do header X-Schema ou do body
+      const schema = (req.headers['x-schema'] as string) || req.body?.schema || req.schema
 
-      console.log('[LOGIN] Executando use case...')
-      const result = await this.loginUseCase.execute(validated)
+      if (!schema) {
+        console.log('[LOGIN] Schema não fornecido')
+        return res.status(400).json({ 
+          status: 'error', 
+          message: 'Schema é obrigatório. Envie no header X-Schema ou no body como "schema"' 
+        })
+      }
+
+      console.log('[LOGIN] Schema recebido:', schema)
+      console.log('[LOGIN] Validando dados de login...')
+      const validated = loginSchema.parse(req.body)
+      console.log('[LOGIN] Dados validados com sucesso')
+
+      console.log('[LOGIN] Executando use case com schema:', schema)
+      const result = await this.loginUseCase.execute({ ...validated, schema })
       
       const duration = Date.now() - startTime
       console.log('[LOGIN] Login realizado com sucesso em', duration, 'ms')

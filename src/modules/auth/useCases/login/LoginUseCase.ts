@@ -7,6 +7,7 @@ import { PermissionService } from '../../services/PermissionService'
 export interface LoginDTO {
   loginOrEmail: string
   password: string
+  schema?: string
 }
 
 export interface LoginResponse {
@@ -35,16 +36,19 @@ export class LoginUseCase {
         passwordLength: data.password?.length || 0
       })
 
-      // 1. Buscar usuário por login ou email (com senha) em todos os schemas
-      console.log('[LOGIN_USE_CASE] Buscando usuário no repositório...')
-      const result = await this.usersRepository.findSchemaByLoginOrEmail(data.loginOrEmail)
-
-      if (!result) {
-        console.log('[LOGIN_USE_CASE] Usuário não encontrado para:', data.loginOrEmail)
-        throw new AppError('Credenciais inválidas', 401)
+      // 1. Buscar usuário por login ou email (com senha) no schema especificado
+      if (!data.schema) {
+        console.log('[LOGIN_USE_CASE] Schema não fornecido')
+        throw new AppError('Schema é obrigatório para login', 400)
       }
 
-      const userWithPassword = result.user
+      console.log('[LOGIN_USE_CASE] Buscando usuário no schema:', data.schema)
+      const userWithPassword = await this.usersRepository.findByLoginOrEmailWithPassword(data.schema, data.loginOrEmail)
+
+      if (!userWithPassword) {
+        console.log('[LOGIN_USE_CASE] Usuário não encontrado para:', data.loginOrEmail, 'no schema:', data.schema)
+        throw new AppError('Credenciais inválidas', 401)
+      }
 
       console.log('[LOGIN_USE_CASE] Usuário encontrado:', {
         id: userWithPassword.id,
