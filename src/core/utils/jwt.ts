@@ -28,10 +28,10 @@ export const generatePasswordToken = (userId: string, login: string) => {
     login,
   }
 
-  const options = {
+  const options: SignOptions = {
     subject: userId,
-    expiresIn: env.security.jwtExpiresIn,
-  } as SignOptions
+    expiresIn: '12h', // Token de reset de senha expira em 12 horas
+  }
 
   return jwt.sign(payload, env.security.jwtSecret, options)
 }
