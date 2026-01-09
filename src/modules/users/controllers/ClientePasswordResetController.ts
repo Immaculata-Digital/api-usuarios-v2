@@ -11,7 +11,7 @@ const CHAVE_COMUNICACAO_RESET_PASSWORD_CLIENTE = 'EMAIL-REDEFINICAO-SENHA-CLIENT
 export class ClientePasswordResetController {
   static forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { email } = req.body
+      const { email, web_url } = req.body
       const clientIP = req.ip || req.connection.remoteAddress || 'unknown'
 
       if (!email || typeof email !== 'string' || email.trim().length === 0) {
@@ -50,8 +50,29 @@ export class ClientePasswordResetController {
       // Gerar token de reset de senha
       const token = generatePasswordToken(user.id, user.login)
 
-      // Construir URL de reset
-      const baseUrl = env.app.webUrl.replace(/\/$/, '')
+      // Determinar URL do front-end: prioridade: web_url do body > Origin header > Referer header > env
+      let frontendUrl = web_url
+      if (!frontendUrl) {
+        const origin = req.headers.origin
+        const referer = req.headers.referer
+        if (origin) {
+          frontendUrl = origin
+        } else if (referer) {
+          // Extrair apenas a origem do referer (protocolo + host)
+          try {
+            const refererUrl = new URL(referer)
+            frontendUrl = `${refererUrl.protocol}//${refererUrl.host}`
+          } catch {
+            // Se não conseguir parsear, usar env
+            frontendUrl = env.app.webUrl
+          }
+        } else {
+          frontendUrl = env.app.webUrl
+        }
+      }
+
+      // Construir URL de reset (para logs, mas a URL final será construída na API de comunicações)
+      const baseUrl = frontendUrl.replace(/\/$/, '')
       const path = env.app.passwordResetPath.startsWith('/')
         ? env.app.passwordResetPath
         : `/${env.app.passwordResetPath}`
@@ -78,6 +99,7 @@ export class ClientePasswordResetController {
               email: user.email,
               token_reset: token,
             },
+            web_url: frontendUrl, // Enviar URL dinâmica do front-end
           }),
         })
 
