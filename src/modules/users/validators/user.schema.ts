@@ -21,7 +21,7 @@ export const createUserSchema = z.object({
   fullName: z.string().min(3),
   login: z.string().min(3),
   email: z.string().email(),
-  groupIds: z.array(z.string().uuid()),
+  groupIds: z.array(z.string().uuid()).min(1, { message: 'Selecione pelo menos um grupo de acesso' }),
   password: z.string().min(8).optional(),
   allowFeatures: featureSchema,
   deniedFeatures: featureSchema,
