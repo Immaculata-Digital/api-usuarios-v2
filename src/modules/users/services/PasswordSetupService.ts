@@ -12,12 +12,12 @@ export class PasswordSetupService {
     const path = env.app.passwordResetPath.startsWith('/')
       ? env.app.passwordResetPath
       : `/${env.app.passwordResetPath}`
-    const urlReset = `${baseUrl}${path}?token=${token}`
 
     // Preparar variáveis para o template HTML
     const nomeUsuario = user.fullName || user.login
 
     // Chamar API de comunicações para disparo automático
+    // Passar web_url completa para que a API de comunicações construa a URL corretamente
     try {
       const response = await fetch(`${env.apiComunicacoes.url}/${schema}/disparo-automatico`, {
         method: 'POST',
@@ -32,6 +32,7 @@ export class PasswordSetupService {
             email: user.email,
             token_reset: token,
           },
+          web_url: baseUrl, // Passar a URL base para a API de comunicações construir a URL completa
         }),
       })
 
