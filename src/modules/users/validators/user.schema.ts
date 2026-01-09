@@ -22,7 +22,13 @@ export const createUserSchema = z.object({
   login: z.string().min(3),
   email: z.string().email(),
   groupIds: z.array(z.string().uuid()).min(1, { message: 'Selecione pelo menos um grupo de acesso' }),
-  password: z.string().min(8).optional(),
+  password: z
+    .string()
+    .transform((val) => (val && val.trim() !== '' ? val : undefined))
+    .refine((val) => val === undefined || val.length >= 8, {
+      message: 'A senha deve ter pelo menos 8 caracteres',
+    })
+    .optional(),
   allowFeatures: featureSchema,
   deniedFeatures: featureSchema,
   lojasGestoras: z.array(z.number().int().positive()).optional(),
