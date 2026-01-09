@@ -171,15 +171,7 @@ export class UserController {
         throw new AppError('Falha de validação', 422, parseResult.error.flatten())
       }
 
-      // Transformar string vazia em undefined para senha
-      const userData = {
-        ...parseResult.data,
-        password: parseResult.data.password && parseResult.data.password.trim() !== '' 
-          ? parseResult.data.password 
-          : undefined,
-      }
-
-      const user = await this.createUser.execute(schema, userData)
+      const user = await this.createUser.execute(schema, parseResult.data)
       return res.status(201).json(user)
     } catch (error) {
       return next(error)
