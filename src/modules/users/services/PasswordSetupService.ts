@@ -8,10 +8,19 @@ const CHAVE_COMUNICACAO_RESET_PASSWORD = 'EMAIL-REDEFINICAO-SENHA'
 export class PasswordSetupService {
   async send(schema: string, user: UserProps) {
     const token = generatePasswordToken(user.id, user.login)
-    const baseUrl = env.app.webUrl.replace(/\/$/, '')
-    const path = env.app.passwordResetPath.startsWith('/')
-      ? env.app.passwordResetPath
-      : `/${env.app.passwordResetPath}`
+    let baseUrl = env.app.webUrl.replace(/\/$/, '')
+    
+    // Validar se a URL está completa (deve começar com http:// ou https://)
+    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      console.error('⚠️ [PasswordSetupService] APP_WEB_URL não está configurada corretamente:', baseUrl)
+      // Tentar construir uma URL válida assumindo que é apenas o domínio
+      if (baseUrl && !baseUrl.includes('://')) {
+        baseUrl = `https://${baseUrl}`
+        console.warn('⚠️ [PasswordSetupService] Tentando corrigir URL:', baseUrl)
+      } else {
+        throw new Error('APP_WEB_URL não está configurada corretamente. Deve ser uma URL completa (ex: https://app.exemplo.com)')
+      }
+    }
 
     // Preparar variáveis para o template HTML
     const nomeUsuario = user.fullName || user.login
