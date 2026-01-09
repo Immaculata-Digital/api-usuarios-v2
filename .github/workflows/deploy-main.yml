@@ -84,6 +84,8 @@ jobs:
             -e BCRYPT_SALT_ROUNDS='${{ secrets.BCRYPT_SALT_ROUNDS }}' \
             -e CORS_ORIGINS='${{ secrets.CORS_ORIGINS }}' \
             -e LOG_LEVEL='${{ secrets.LOG_LEVEL }}' \
+            -e APP_WEB_URL='${{ secrets.APP_WEB_URL_MAIN }}' \
+            -e PASSWORD_RESET_PATH='${{ secrets.PASSWORD_RESET_PATH }}' \
             -e API_COMUNICACOES_URL='${{ secrets.VITE_API_COMUNICACOES_URL_MAIN }}' \
             -e PORT='3333' \
             ghcr.io/${REPO_OWNER_LOWER}/${IMAGE_NAME}:main
