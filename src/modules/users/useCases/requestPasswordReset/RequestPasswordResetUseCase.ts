@@ -9,7 +9,7 @@ const CHAVE_COMUNICACAO_RESET_PASSWORD = 'EMAIL-REDEFINICAO-SENHA'
 export class RequestPasswordResetUseCase {
   constructor(private readonly userRepository: IUserRepository) {}
 
-  async execute(email: string): Promise<void> {
+  async execute(email: string, webUrl?: string): Promise<void> {
     // Buscar schema pelo email
     const schema = await this.userRepository.findSchemaByEmail(email.toLowerCase().trim())
     if (!schema) {
@@ -30,8 +30,8 @@ export class RequestPasswordResetUseCase {
     // Gerar token de reset de senha
     const token = generatePasswordToken(user.id, user.login)
 
-    // Construir URL de reset
-    const baseUrl = env.app.webUrl.replace(/\/$/, '')
+    // Construir URL de reset (para logs, mas a URL final será construída na API de comunicações)
+    const baseUrl = (webUrl || env.app.webUrl).replace(/\/$/, '')
     const path = env.app.passwordResetPath.startsWith('/')
       ? env.app.passwordResetPath
       : `/${env.app.passwordResetPath}`
@@ -58,6 +58,7 @@ export class RequestPasswordResetUseCase {
             email: user.email,
             token_reset: token,
           },
+          web_url: webUrl || env.app.webUrl, // Enviar URL dinâmica do front-end
         }),
       })
 
