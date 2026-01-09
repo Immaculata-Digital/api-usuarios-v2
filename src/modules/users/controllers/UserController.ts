@@ -171,7 +171,31 @@ export class UserController {
         throw new AppError('Falha de validação', 422, parseResult.error.flatten())
       }
 
-      const user = await this.createUser.execute(schema, parseResult.data)
+      // Determinar URL do front-end: prioridade: web_url do body > Origin header > Referer header
+      let frontendUrl = parseResult.data.web_url
+      if (!frontendUrl) {
+        const origin = req.headers.origin
+        const referer = req.headers.referer
+        if (origin) {
+          frontendUrl = origin
+        } else if (referer) {
+          // Extrair apenas a origem do referer (protocolo + host)
+          try {
+            const refererUrl = new URL(referer)
+            frontendUrl = `${refererUrl.protocol}//${refererUrl.host}`
+          } catch {
+            // Se não conseguir parsear, usar undefined
+            frontendUrl = undefined
+          }
+        }
+      }
+
+      const userData = {
+        ...parseResult.data,
+        web_url: frontendUrl,
+      }
+
+      const user = await this.createUser.execute(schema, userData)
       return res.status(201).json(user)
     } catch (error) {
       return next(error)

@@ -33,6 +33,7 @@ export const createUserSchema = z.object({
   deniedFeatures: featureSchema,
   lojasGestoras: z.array(z.number().int().positive()).optional(),
   createdBy: z.string().min(3),
+  web_url: z.string().url().optional(),
 })
 
 export const updateUserSchema = z

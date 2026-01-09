@@ -8,5 +8,6 @@ export interface CreateUserDTO {
   deniedFeatures?: string[] | undefined
   lojasGestoras?: number[] | undefined
   createdBy: string
+  web_url?: string | undefined
 }
 

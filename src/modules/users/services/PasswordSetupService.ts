@@ -6,19 +6,21 @@ import { generatePasswordToken } from '../../../core/utils/jwt'
 const CHAVE_COMUNICACAO_RESET_PASSWORD = 'EMAIL-REDEFINICAO-SENHA'
 
 export class PasswordSetupService {
-  async send(schema: string, user: UserProps) {
+  async send(schema: string, user: UserProps, webUrl?: string) {
     const token = generatePasswordToken(user.id, user.login)
-    let baseUrl = env.app.webUrl.replace(/\/$/, '')
+    
+    // Determinar URL base: prioridade: webUrl recebido > env
+    let baseUrl = webUrl ? webUrl.replace(/\/$/, '') : env.app.webUrl.replace(/\/$/, '')
     
     // Validar se a URL está completa (deve começar com http:// ou https://)
     if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-      console.error('⚠️ [PasswordSetupService] APP_WEB_URL não está configurada corretamente:', baseUrl)
+      console.error('⚠️ [PasswordSetupService] URL não está configurada corretamente:', baseUrl)
       // Tentar construir uma URL válida assumindo que é apenas o domínio
       if (baseUrl && !baseUrl.includes('://')) {
         baseUrl = `https://${baseUrl}`
         console.warn('⚠️ [PasswordSetupService] Tentando corrigir URL:', baseUrl)
       } else {
-        throw new Error('APP_WEB_URL não está configurada corretamente. Deve ser uma URL completa (ex: https://app.exemplo.com)')
+        throw new Error('URL não está configurada corretamente. Deve ser uma URL completa (ex: https://app.exemplo.com)')
       }
     }
 

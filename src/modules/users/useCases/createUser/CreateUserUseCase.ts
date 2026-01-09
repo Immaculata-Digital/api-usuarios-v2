@@ -49,7 +49,7 @@ export class CreateUserUseCase {
       await this.usersRepository.updatePassword(schema, createdUser.id, hashedPassword)
     } else {
       // Se não foi fornecida, enviar email de setup de senha
-      await this.passwordSetup.send(schema, createdUser)
+      await this.passwordSetup.send(schema, createdUser, payload.web_url)
     }
 
     return createdUser
