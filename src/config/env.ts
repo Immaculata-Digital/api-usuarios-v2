@@ -19,11 +19,11 @@ export const env = {
   security: {
     jwtSecret: process.env.JWT_SECRET ?? 'default-jwt-secret',
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? 'default-jwt-refresh-secret',
-    jwtExpiresIn: process.env.ACCESS_TOKEN_TTL ?? process.env.JWT_EXPIRES_IN ?? '15m',
+    jwtExpiresIn: process.env.ACCESS_TOKEN_TTL ?? process.env.JWT_EXPIRES_IN ?? '12h',
     jwtIssuer: process.env.JWT_ISS ?? 'api-usuarios',
     jwtAudience: process.env.JWT_AUD ?? 'api-usuarios',
     jwtAlgorithm: process.env.JWT_ALG ?? 'HS256',
-    accessTokenTTL: process.env.ACCESS_TOKEN_TTL ?? '15m',
+    accessTokenTTL: process.env.ACCESS_TOKEN_TTL ?? '12h',
     refreshTokenTTL: process.env.REFRESH_TOKEN_TTL ?? '7d',
     bcryptSaltRounds: Number(process.env.BCRYPT_SALT_ROUNDS ?? 12),
     cryptoSecret: process.env.CRYPTO_SECRET ?? 'default-crypto-secret',
