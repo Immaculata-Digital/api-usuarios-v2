@@ -17,6 +17,7 @@ const PUBLIC_ROUTES = [
   '/api/auth/refresh-token',
   '/auth/refresh',
   '/api/auth/refresh',
+  // Rotas públicas de redefinição de senha (não requerem autenticação)
   '/users/password/reset-request',
   '/api/users/password/reset-request',
   '/users/password/reset',
