@@ -234,6 +234,54 @@
     ]
   },
   {
+    "key": "erp:dashboard:card-total-clientes",
+    "name": "Dashboard: Card Total de Clientes",
+    "description": "Permite visualizar o card de total de clientes no dashboard.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:dashboard:card-novos-clientes",
+    "name": "Dashboard: Card Novos Clientes",
+    "description": "Permite visualizar o card de novos clientes (7 dias) no dashboard.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:dashboard:card-pontos-creditados",
+    "name": "Dashboard: Card Pontos Creditados",
+    "description": "Permite visualizar o card de pontos creditados (7 dias) no dashboard.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:dashboard:card-pontos-resgatados",
+    "name": "Dashboard: Card Pontos Resgatados",
+    "description": "Permite visualizar o card de pontos resgatados (7 dias) no dashboard.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:dashboard:tabela-novos-clientes",
+    "name": "Dashboard: Tabela Novos Clientes",
+    "description": "Permite visualizar a tabela de novos clientes (7 dias) no dashboard.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:dashboard:tabela-ultimos-resgates",
+    "name": "Dashboard: Tabela Últimos Resgates",
+    "description": "Permite visualizar a tabela de últimos resgates no dashboard.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:dashboard:acrescentar-pontos",
+    "name": "Dashboard: Acrescentar Pontos ao Cliente",
+    "description": "Permite visualizar e usar o card de acrescentar pontos ao cliente no dashboard.",
+    "api-routes": []
+  },
+  {
+    "key": "erp:dashboard:consultar-codigo-resgate",
+    "name": "Dashboard: Consultar Código de Resgate",
+    "description": "Permite visualizar e usar o card de consultar código de resgate no dashboard.",
+    "api-routes": []
+  },
+  {
     "key": "erp:gestao:menu",
     "name": "Gestão: Menu",
     "description": "Permite visualizar o menu de gestão (lojas e clientes).",
