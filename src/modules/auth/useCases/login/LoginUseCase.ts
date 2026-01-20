@@ -18,6 +18,7 @@ export interface LoginResponse {
     fullName: string
     login: string
     email: string
+    id_loja?: number
   }
 }
 
@@ -92,6 +93,13 @@ export class LoginUseCase {
       const refreshToken = generateRefreshToken(userWithPassword.id)
       console.log('[LOGIN_USE_CASE] Tokens gerados com sucesso')
 
+      // Obter a primeira loja gestora do usuário (se houver)
+      const id_loja = userWithPassword.lojasGestoras && userWithPassword.lojasGestoras.length > 0
+        ? userWithPassword.lojasGestoras[0]
+        : undefined
+
+      console.log('[LOGIN_USE_CASE] id_loja obtido:', id_loja)
+
       return {
         accessToken,
         refreshToken,
@@ -100,6 +108,7 @@ export class LoginUseCase {
           fullName: userWithPassword.fullName,
           login: userWithPassword.login,
           email: userWithPassword.email,
+          id_loja,
         },
       }
     } catch (error: unknown) {
