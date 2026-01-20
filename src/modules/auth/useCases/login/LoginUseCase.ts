@@ -108,7 +108,7 @@ export class LoginUseCase {
           fullName: userWithPassword.fullName,
           login: userWithPassword.login,
           email: userWithPassword.email,
-          id_loja,
+          ...(id_loja !== undefined && { id_loja }),
         },
       }
     } catch (error: unknown) {
