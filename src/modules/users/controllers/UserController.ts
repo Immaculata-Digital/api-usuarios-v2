@@ -93,7 +93,7 @@ export class UserController {
         throw new AppError('Schema é obrigatório', 400)
       }
 
-      const { login, senha, email } = req.body
+      const { login, senha, email, nome } = req.body
 
       if (!login || !senha || !email) {
         throw new AppError('Login, senha e email são obrigatórios', 400)
@@ -126,9 +126,12 @@ export class UserController {
         throw new AppError('E-mail já está em uso', 409)
       }
 
+      // Usar o nome fornecido ou o login como fallback para o fullName
+      const fullName = nome ? nome.trim() : login.trim()
+
       // Criar usuário cliente com senha (para não enviar email de setup)
       const user = await this.createUser.execute(schema, {
-        fullName: login.trim(),
+        fullName: fullName,
         login: login.trim(),
         email: email.trim().toLowerCase(),
         groupIds: [clientGroup.id],
